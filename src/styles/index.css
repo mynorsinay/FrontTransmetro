@@ -1,0 +1,141 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables CSS */
+:root {
+  --verde-claro: #01ff09;
+  --verde-oscuro: #60ff40;
+  --blanco: #ffffff;
+  --negro: #000000;
+}
+
+/* Estilos base */
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: var(--verde-oscuro);
+  color: var(--blanco);
+  @apply min-h-screen flex flex-col;
+}
+
+@layer components {
+  /* Header */
+  .header {
+    @apply h-16 bg-black text-[--verde-claro] flex items-center justify-between px-6 shadow-md;
+  }
+
+  /* Sidebar */
+  .container-main {
+    @apply flex-1 flex overflow-hidden;
+  }
+
+  .sidebar {
+    @apply bg-black text-white p-4 flex flex-col gap-4 shadow-lg h-screen;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-white hover:text-[--verde-claro] transition;
+  }
+
+  .active-link {
+    @apply text-[--verde-claro] font-semibold;
+  }
+
+  /* Contenido principal */
+  .main-content {
+    @apply flex-1 bg-[--verde-oscuro] p-6 overflow-y-auto;
+  }
+
+  /* Botón */
+  button {
+    @apply bg-[--verde-claro] text-white font-semibold py-2 px-4 rounded shadow transition duration-300;
+  }
+
+  button:hover {
+    @apply bg-[#60ff40];
+  }
+
+  /* Inputs y selects */
+  input,
+  select {
+    @apply w-full p-2 rounded bg-gray-800 text-white border border-[--verde-claro];
+  }
+
+  input:focus,
+  select:focus {
+    @apply outline-none ring-2 ring-[--verde-claro];
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold;
+  }
+
+  a {
+    @apply transition-colors duration-200 text-white hover:text-[--verde-claro];
+  }
+
+  /* Tablas */
+  table {
+    @apply w-full table-auto border-collapse mt-4;
+  }
+
+  thead {
+    @apply bg-[--verde-claro] text-black;
+  }
+
+  th,
+  td {
+    @apply px-4 py-2 border border-gray-200;
+  }
+
+  /* Tarjetas */
+  .card {
+    @apply bg-white text-black rounded-lg p-4 shadow hover:shadow-lg transition;
+  }
+
+  .card-header {
+    @apply text-lg font-semibold mb-2;
+  }
+
+  .card-list {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+
+  .card-track {
+    @apply bg-[--verde-oscuro] text-white p-3 rounded shadow hover:bg-[--verde-claro] transition;
+  }
+
+  .track-info {
+    @apply flex justify-between items-center;
+  }
+
+  /* Estilo para el formulario de Mandar a Mantenimiento */
+  .MandarAMantenimiento-container {
+    background-color: var(--blanco) !important; /* Cambia el fondo a blanco */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+
+  .MandarAMantenimiento-container input {
+    color: var(--negro);
+    border: 2px solid var(--verde-claro); /* Borde verde claro */
+  }
+
+  .MandarAMantenimiento-container button {
+    background-color: var(--verde-claro);
+    color: var(--blanco);
+    border-radius: 4px;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+  }
+
+  .MandarAMantenimiento-container button:hover {
+    background-color: #60ff40; /* Verde más oscuro */
+  }
+}
