@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "../../components/ui/card"; 
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api"; 
@@ -14,17 +13,32 @@ export default function EliminarPiloto() {
     CUI: "", 
   });
 
+  const [pilotosDisponibles, setPilotosDisponibles] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [cargando, setCargando] = useState(false);
+
+  // Obtener pilotos disponibles al cargar el componente
+  useEffect(() => {
+    const obtenerPilotosDisponibles = async () => {
+      try {
+        setCargando(true);
+        const res = await api.post("/Pilotos/PilotosDispo", {});
+        setPilotosDisponibles(res.data || []);
+      } catch (error) {
+        console.error("Error al obtener pilotos disponibles:", error);
+        setModalMessage("❌ Error al cargar la lista de pilotos");
+        setModalOpen(true);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    obtenerPilotosDisponibles();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Validación: solo permite números
-    if (name === "CUI" && !/^\d*$/.test(value)) {
-      return; // No actualiza el estado si no es un número
-    }
-    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -34,22 +48,38 @@ export default function EliminarPiloto() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const res = await api.post("/Pilotos/EliminarPilotos", formData);
-      console.log("Piloto eliminado: ", res.data);
+    if (!formData.CUI) {
+      setModalMessage("⚠️ Por favor seleccione un piloto de la lista");
+      setModalOpen(true);
+      return;
+    }
 
-      setModalMessage("El piloto ha sido eliminado correctamente.");
+    try {
+      setCargando(true);
+      const res = await api.post("/Pilotos/EliminarPilotos", formData);
+      
+      if (res.status === 200) {
+        setModalMessage("✅ El piloto ha sido deshabilitado correctamente.");
+        // Actualizar la lista después de eliminar
+        const updatedList = await api.post("/Pilotos/PilotosDispo", {});
+        setPilotosDisponibles(updatedList.data || []);
+      } else {
+        setModalMessage("❌ No se pudo deshabilitar el piloto.");
+      }
+      
       setModalOpen(true);
+      setFormData({ CUI: "" }); // Limpiar el formulario
     } catch (error) {
-      console.error("Error al eliminar el piloto:", error);
-      setModalMessage("Error al eliminar el piloto.");
+      console.error("Error al deshabilitar el piloto:", error);
+      setModalMessage("⚠️ Error al conectar con el servidor.");
       setModalOpen(true);
+    } finally {
+      setCargando(false);
     }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    window.location.reload();
   };
 
   return (
@@ -61,22 +91,37 @@ export default function EliminarPiloto() {
         ⬅️ Regresar
       </button>
 
-      <Header titulo="Eliminar Piloto" fechaHora={new Date()} />
+      <Header titulo="Deshabilitar Piloto" fechaHora={new Date()} />
 
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="CUI del Piloto"
-              name="CUI"
-              value={formData.CUI}
-              onChange={handleChange}
-              type="text" // Mantenemos type="text" para mejor control
-              inputMode="numeric" // Muestra teclado numérico en dispositivos móviles
-              pattern="[0-9]*" // Ayuda en algunos navegadores
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Seleccione el Piloto a deshabilitar *
+              </label>
+              <select
+                name="CUI"
+                value={formData.CUI}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#01ff09] focus:border-[#01ff09]"
+                disabled={cargando}
+              >
+                <option value="">Seleccione un piloto</option>
+                {pilotosDisponibles.map((piloto) => (
+                  <option key={piloto.cuiPiloto} value={piloto.cuiPiloto}>
+                    {piloto.cuiPiloto} - {piloto.nombre}
+                  </option>
+                ))}
+              </select>
+              {cargando && (
+                <p className="text-sm text-gray-500">Cargando pilotos disponibles...</p>
+              )}
+            </div>
             <div className="flex justify-end">
-              <Button type="submit">Eliminar Piloto</Button>
+              <Button type="submit" disabled={cargando}>
+                {cargando ? "Deshabilitando..." : "Deshabilitar Piloto"}
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -85,10 +130,12 @@ export default function EliminarPiloto() {
       <Modal
         isOpen={modalOpen}
         onClose={handleCloseModal}
-        title="Resultado de la Eliminación"
+        title="Resultado de la Deshabilitacion"
       >
-        <p>{modalMessage}</p>
-        <Button onClick={handleCloseModal}>Cerrar</Button>
+        <p className="mb-4">{modalMessage}</p>
+        <div className="flex justify-end">
+          <Button onClick={handleCloseModal}>Cerrar</Button>
+        </div>
       </Modal>
     </div>
   );

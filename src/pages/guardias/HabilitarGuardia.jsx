@@ -58,7 +58,13 @@ export default function HabilitarGuardia() {
       setModalOpen(true);
     } catch (error) {
       console.error("Error al habilitar el guardia:", error);
-      setModalMessage("⚠️ Error al habilitar el guardia.");
+        let errorMsg = "❌Error al habilitar el guardia.";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+        setModalMessage(errorMsg);
       setModalOpen(true);
     }
   };

@@ -103,8 +103,14 @@ export default function ActualizarEstacion() {
       const res = await api.post("/Estaciones/ActualizarEstacion", payload);
       if (res.status === 200) {
         setModalMessage("✅ Estación actualizada correctamente.");
-      } else {
-        setModalMessage("❌ No se pudo actualizar la estación.");
+      } else {       
+        let errorMsg = "❌ No se pudo actualizar la estación.";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+  setModalMessage(errorMsg);
       }
       setModalOpen(true);
       setFormData({
