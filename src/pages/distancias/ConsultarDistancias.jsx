@@ -127,8 +127,8 @@ export default function ConsultarDistancias() {
             <thead>
               <tr className="bg-[#01ff09] text-white">
                 <th className="px-4 py-2">Ruta</th>
-                <th className="px-4 py-2">Inicio</th>
-                <th className="px-4 py-2">Fin</th>
+                <th className="px-4 py-2">Estación Inicio</th>
+                <th className="px-4 py-2">Estación Fin</th>
                 <th className="px-4 py-2">Recorrido (km)</th>
               </tr>
             </thead>

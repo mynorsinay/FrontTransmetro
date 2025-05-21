@@ -61,8 +61,14 @@ export default function RegistrarEstacion() {
         direccion: "",
       });
     } catch (error) {
-      console.error("Error al guardar la estación", error);
-      setModalMessage("❌ No se pudo registrar la estación.");
+      console.error("Error al guardar la estación", error);     
+        let errorMsg = "❌ No se pudo registrar la estación.";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+  setModalMessage(errorMsg);
       setModalOpen(true);
     }
   };

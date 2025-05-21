@@ -1,21 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
 
-export default function HabilitarBuses() {
+export default function DeshabilitarBuses() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    Placa: "", // Placa del bus a habilitar
+    Placa: "", // Placa del bus a deshabilitar
   });
 
+  const [buses, setBuses] = useState([]); // Lista de buses no disponibles
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+
+  useEffect(() => {
+    const fetchBusesNoDisponibles = async () => {
+      try {
+        const res = await api.post("/Buses/BusesNoDisponibles");
+        const data = res.data || [];
+
+        // Solo actualiza si hay datos
+        if (Array.isArray(data) && data.length > 0) {
+          setBuses(data);
+        }
+      } catch (error) {
+        console.error("Error al cargar los buses no disponibles:", error);
+        // Si ocurre un error en el fetch, puedes decidir ignorarlo por completo
+        // o mostrar un mensaje de consola como arriba.
+      }
+    };
+
+    fetchBusesNoDisponibles();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,7 +54,7 @@ export default function HabilitarBuses() {
 
       setModalMessage("✅ El bus ha sido habilitado correctamente.");
       setModalOpen(true);
-      setFormData({ Placa: "" }); // Limpiar el formulario
+      setFormData({ Placa: "" });
     } catch (error) {
       console.error("Error al habilitar el bus:", error);
       setModalMessage("❌ Error al habilitar el bus.");
@@ -44,12 +64,11 @@ export default function HabilitarBuses() {
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    window.location.reload(); // Actualizar la página al cerrar el modal
+    window.location.reload();
   };
 
   return (
     <div className="p-6">
-      {/* Botón para regresar */}
       <button
         onClick={() => navigate("/buses")}
         className="mb-6 px-4 py-2 bg-[#01ff09] text-black rounded-xl font-semibold hover:bg-[#00e607] transition"
@@ -57,31 +76,46 @@ export default function HabilitarBuses() {
         ⬅️ Regresar
       </button>
 
-      {/* Header de la página */}
       <Header titulo="Habilitar Bus" fechaHora={new Date()} />
 
-      {/* Formulario dentro de una tarjeta */}
       <Card>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Placa del Bus"
-              name="Placa"
-              value={formData.Placa}
-              onChange={handleChange}
-              placeholder="Ingrese la placa del bus a habilitar"
-            />
-            <div className="flex justify-end">
-              <Button type="submit">Habilitar Bus</Button>
-            </div>
-          </form>
+          {buses.length > 0 ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="Placa" className="block font-medium mb-1">
+                  Seleccione la placa del bus
+                </label>
+                <select
+                  id="Placa"
+                  name="Placa"
+                  value={formData.Placa}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="">-- Seleccione una placa --</option>
+                  {buses.map((bus, idx) => (
+                    <option key={idx} value={bus.placa}>
+                      {bus.placa}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit">Habilitar Bus</Button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-gray-500">No hay buses para habilitar.</p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Modal de resultados */}
-      <Modal 
-        isOpen={modalOpen} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
         title="Resultado de la Habilitación"
       >
         <p className="mb-4">{modalMessage}</p>

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api"; 
@@ -14,8 +13,25 @@ export default function DeshabilitarBuses() {
     Placa: "", // Placa del bus a deshabilitar
   });
 
+  const [buses, setBuses] = useState([]); // Lista de buses no disponibles
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState(""); // Mensaje para el modal
+  const [modalMessage, setModalMessage] = useState("");
+
+  useEffect(() => {
+    // Cargar las placas disponibles al montar
+    const fetchBusesNoDisponibles = async () => {
+      try {
+        const res = await api.post("/Buses/BusesDisponibles");
+        setBuses(res.data || []);
+      } catch (error) {
+        console.error("Error al cargar los buses no disponibles:", error);
+        setModalMessage("❌ Error al cargar los buses no disponibles.");
+        setModalOpen(true);
+      }
+    };
+
+    fetchBusesNoDisponibles();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,29 +45,26 @@ export default function DeshabilitarBuses() {
     e.preventDefault();
 
     try {
-      // Realizar la solicitud a la API para deshabilitar el bus
       const res = await api.post("/Buses/DeshabilitarBuses", formData);
-      console.log("Bus deshabilitado: ", res.data); // Mostrar la respuesta del backend
+      console.log("Bus deshabilitado: ", res.data);
 
-      // Si la deshabilitación es exitosa, mostramos el modal
       setModalMessage("✅ El bus ha sido deshabilitado correctamente.");
       setModalOpen(true);
-      setFormData({ Placa: "" }); // Limpiar el formulario
+      setFormData({ Placa: "" });
     } catch (error) {
       console.error("Error al deshabilitar el bus:", error);
       setModalMessage("❌ Error al deshabilitar el bus.");
-      setModalOpen(true); // Mostrar modal de error
+      setModalOpen(true);
     }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    window.location.reload(); // Actualizar la página al cerrar el modal
+    window.location.reload(); // o puedes volver a consultar los buses disponibles
   };
 
   return (
     <div className="p-6">
-      {/* Botón para regresar */}
       <button
         onClick={() => navigate("/buses")}
         className="mb-6 px-4 py-2 bg-[#01ff09] text-black rounded-xl font-semibold hover:bg-[#00e607] transition"
@@ -59,20 +72,32 @@ export default function DeshabilitarBuses() {
         ⬅️ Regresar
       </button>
 
-      {/* Header de la página */}
       <Header titulo="Deshabilitar Bus" fechaHora={new Date()} />
 
-      {/* Formulario dentro de una tarjeta */}
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Placa del Bus"
-              name="Placa"
-              value={formData.Placa}
-              onChange={handleChange}
-              placeholder="Ingrese la placa del bus a deshabilitar"
-            />
+            <div>
+              <label htmlFor="Placa" className="block font-medium mb-1">
+                Seleccione la placa del bus
+              </label>
+              <select
+                id="Placa"
+                name="Placa"
+                value={formData.Placa}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                required
+              >
+                <option value="">-- Seleccione una placa --</option>
+                {buses.map((bus, idx) => (
+                  <option key={idx} value={bus.placa}>
+                    {bus.placa}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-end">
               <Button type="submit">Deshabilitar Bus</Button>
             </div>
@@ -80,7 +105,6 @@ export default function DeshabilitarBuses() {
         </CardContent>
       </Card>
 
-      {/* Modal de resultados */}
       <Modal 
         isOpen={modalOpen} 
         onClose={handleCloseModal} 

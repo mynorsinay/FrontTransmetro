@@ -25,8 +25,14 @@ export default function EliminarGuardia() {
       // Mostrar el mensaje según la respuesta del backend
       if (res.status === 200) {
         setModalMessage("✅ Guardia eliminado exitosamente.");
-      } else {
-        setModalMessage("❌ No se pudo eliminar el guardia.");
+      } else {  
+        let errorMsg = "❌ No se pudo eliminar el guardia.";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+        setModalMessage(errorMsg);
       }
       setModalOpen(true); // Mostrar el modal con el mensaje
       setCui(""); // Limpiar el campo CUI

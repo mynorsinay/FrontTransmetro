@@ -35,42 +35,72 @@ export default function ActualizarPiloto() {
   const [horarios, setHorarios] = useState([]);
   const [cargandoHorarios, setCargandoHorarios] = useState(false);
   const [formEnabled, setFormEnabled] = useState(false);
+  const [pilotosDisponibles, setPilotosDisponibles] = useState([]);
+  const [cargandoPilotos, setCargandoPilotos] = useState(false);
 
   const tiposLicencia = ["A", "B", "C"];
 
+  const limpiarFormulario = () => {
+    setFormData({
+      CUI: "",
+      idEstado: 1,
+      idHorario: "",
+      primerNombre: "",
+      segundoNombre: "",
+      primerApellido: "",
+      segundoApellido: "",
+      tipoLicencia: "A",
+      numeroLicencia: "",
+      vencimientoLicencia: "",
+      horasActivo: "",
+      correo: "",
+      telefono: ""
+    });
+    setErrors({});
+    setFormEnabled(false);
+  };
+
   useEffect(() => {
-    const cargarHorarios = async () => {
+    const cargarDatosIniciales = async () => {
+      setCargandoPilotos(true);
       setCargandoHorarios(true);
+      
       try {
-        const response = await api.post("/Horarios/ConsultarHorarios", {});
-        setHorarios(response.data);
+        const resPilotos = await api.post("/Pilotos/PilotosDispo", {});
+        setPilotosDisponibles(resPilotos.data || []);
+        
+        const resHorarios = await api.post("/Horarios/ConsultarHorarios", {});
+        setHorarios(resHorarios.data || []);
       } catch (error) {
-        console.error("Error al cargar horarios:", error);
-        setModalMessage("Error al cargar los horarios disponibles");
+        console.error("Error al cargar datos iniciales:", error);
+        setModalMessage("Error al cargar los datos iniciales: " + (error.response?.data?.message || error.message));
         setModalOpen({ isOpen: true, isSuccess: false });
       } finally {
+        setCargandoPilotos(false);
         setCargandoHorarios(false);
       }
     };
 
-    cargarHorarios();
+    cargarDatosIniciales();
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     
-    // Validación para campos de texto (solo letras)
+    if (name === "CUI") {
+      setFormData(prev => ({ ...prev, CUI: value }));
+      if (value) {
+        await cargarDatosPiloto(value);
+      } else {
+        limpiarFormulario();
+      }
+      return;
+    }
+    
     if (["primerNombre", "segundoNombre", "primerApellido", "segundoApellido"].includes(name)) {
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) return;
     }
     
-    // Validación para CUI (solo números)
-    if (name === "CUI") {
-      if (!/^\d*$/.test(value)) return;
-      if (value.length > 13) return;
-    }
-    
-    // Validación para campos numéricos
     if (["horasActivo", "telefono"].includes(name)) {
       if (!/^\d*$/.test(value)) return;
     }
@@ -80,26 +110,22 @@ export default function ActualizarPiloto() {
       [name]: value
     }));
 
-    // Limpiar error al modificar
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  const consultarPiloto = async () => {
-    if (!formData.CUI) {
-      setModalMessage("Por favor ingrese un CUI para consultar");
-      setModalOpen({ isOpen: true, isSuccess: false });
-      return;
-    }
-
+  const cargarDatosPiloto = async (cui) => {
     try {
-      const res = await api.post("/Pilotos/ConsultarPilotos", { CUI: formData.CUI });
+      const res = await api.post("/Pilotos/ConsultarPilotos", { CUI: cui });
+      
       if (res.data && res.data.length > 0) {
         const piloto = res.data[0];
+        
         setFormData({
-          ...formData,
-          idHorario: piloto.idHorario || "",
+          CUI: cui,
+          idEstado: piloto.idEstado || 1,
+          idHorario: piloto.idHorario?.toString() || "",
           primerNombre: piloto.primerNombre || "",
           segundoNombre: piloto.segundoNombre || "",
           primerApellido: piloto.primerApellido || "",
@@ -107,20 +133,20 @@ export default function ActualizarPiloto() {
           tipoLicencia: piloto.tipoLicencia || "A",
           numeroLicencia: piloto.numeroLicencia || "",
           vencimientoLicencia: formatDateForInput(piloto.vencimientoLicencia),
-          horasActivo: piloto.horasActivo || "",
+          horasActivo: piloto.horasActivo?.toString() || "",
           correo: piloto.correo || "",
           telefono: piloto.telefono || ""
         });
-        setModalMessage("Piloto encontrado. Puede editar los campos habilitados.");
+        
         setFormEnabled(true);
       } else {
-        setModalMessage("No se encontró ningún piloto con ese CUI");
+        setModalMessage("No se encontró información para el piloto seleccionado");
+        setModalOpen({ isOpen: true, isSuccess: false });
         setFormEnabled(false);
       }
-      setModalOpen({ isOpen: true, isSuccess: false });
     } catch (error) {
-      console.error("Error al consultar el piloto:", error);
-      setModalMessage("Error al consultar el piloto");
+      console.error("Error al cargar datos del piloto:", error);
+      setModalMessage(`Error al cargar los datos del piloto: ${error.response?.data?.message || error.message}`);
       setModalOpen({ isOpen: true, isSuccess: false });
       setFormEnabled(false);
     }
@@ -137,7 +163,6 @@ export default function ActualizarPiloto() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
-    // Validaciones para nombres y apellidos
     if (!formData.primerNombre || !nameRegex.test(formData.primerNombre)) {
       newErrors.primerNombre = "Solo se permiten letras";
     }
@@ -151,32 +176,26 @@ export default function ActualizarPiloto() {
       newErrors.segundoApellido = "Solo se permiten letras";
     }
 
-    // Validación para CUI
-    if (!formData.CUI || !/^\d{13}$/.test(formData.CUI)) {
-      newErrors.CUI = "Debe tener 13 dígitos numéricos";
+    if (!formData.CUI) {
+      newErrors.CUI = "Debe seleccionar un piloto";
     }
 
-    // Validación para horas activo
     if (!formData.horasActivo || !/^\d+$/.test(formData.horasActivo)) {
       newErrors.horasActivo = "Solo se permiten números";
     }
 
-    // Validación para correo
     if (!formData.correo || !emailRegex.test(formData.correo)) {
       newErrors.correo = "Ingrese un correo válido";
     }
 
-    // Validación para teléfono
     if (!formData.telefono || !/^\d{8}$/.test(formData.telefono)) {
       newErrors.telefono = "Debe tener 8 dígitos numéricos";
     }
 
-    // Validación para horario
     if (!formData.idHorario) {
       newErrors.idHorario = "Debe seleccionar un horario";
     }
 
-    // Validación para vencimiento de licencia
     if (!formData.vencimientoLicencia) {
       newErrors.vencimientoLicencia = "Debe seleccionar una fecha";
     }
@@ -212,7 +231,7 @@ export default function ActualizarPiloto() {
       };
 
       const res = await api.post("/Pilotos/ActualizarPilotos", datosParaEnviar);
-      console.log("Piloto actualizado: ", res.data);
+      
       setModalMessage("✅ El piloto ha sido actualizado correctamente.");
       setModalOpen({ isOpen: true, isSuccess: true });
     } catch (error) {
@@ -252,26 +271,28 @@ export default function ActualizarPiloto() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <Input
-                  label="CUI del Piloto *"
-                  name="CUI"
-                  value={formData.CUI}
-                  onChange={handleChange}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength="13"
-                />
-                {errors.CUI && <p className="text-red-500 text-sm">{errors.CUI}</p>}
-              </div>
-              <Button 
-                type="button" 
-                onClick={consultarPiloto}
-                className="h-[42px]"
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Seleccione el Piloto a Actualizar *
+              </label>
+              <select
+                name="CUI"
+                value={formData.CUI}
+                onChange={handleChange}
+                className={`w-full p-2 border ${errors.CUI ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-[#01ff09] focus:border-[#01ff09]`}
+                disabled={cargandoPilotos}
               >
-                Consultar
-              </Button>
+                <option value="">Seleccione un piloto</option>
+                {pilotosDisponibles.map((piloto) => (
+                  <option key={piloto.cuiPiloto} value={piloto.cuiPiloto}>
+                    {piloto.cuiPiloto} - {piloto.nombre} 
+                  </option>
+                ))}
+              </select>
+              {errors.CUI && <p className="text-red-500 text-sm">{errors.CUI}</p>}
+              {cargandoPilotos && (
+                <p className="text-sm text-gray-500">Cargando pilotos disponibles...</p>
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +302,7 @@ export default function ActualizarPiloto() {
                   name="primerNombre"
                   value={formData.primerNombre}
                   onChange={handleChange}
-                  readOnly
+                  readOnly={!formEnabled}
                 />
                 {errors.primerNombre && <p className="text-red-500 text-sm">{errors.primerNombre}</p>}
               </div>
@@ -291,7 +312,7 @@ export default function ActualizarPiloto() {
                   name="segundoNombre"
                   value={formData.segundoNombre}
                   onChange={handleChange}
-                  readOnly
+                  readOnly={!formEnabled}
                 />
                 {errors.segundoNombre && <p className="text-red-500 text-sm">{errors.segundoNombre}</p>}
               </div>
@@ -301,7 +322,7 @@ export default function ActualizarPiloto() {
                   name="primerApellido"
                   value={formData.primerApellido}
                   onChange={handleChange}
-                  readOnly
+                  readOnly={!formEnabled}
                 />
                 {errors.primerApellido && <p className="text-red-500 text-sm">{errors.primerApellido}</p>}
               </div>
@@ -311,7 +332,7 @@ export default function ActualizarPiloto() {
                   name="segundoApellido"
                   value={formData.segundoApellido}
                   onChange={handleChange}
-                  readOnly
+                  readOnly={!formEnabled}
                 />
                 {errors.segundoApellido && <p className="text-red-500 text-sm">{errors.segundoApellido}</p>}
               </div>
@@ -323,7 +344,7 @@ export default function ActualizarPiloto() {
                 name="tipoLicencia"
                 value={formData.tipoLicencia}
                 onChange={handleChange}
-                className="block w-full px-3 py-2 border border-gray-300  shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 disabled={!formEnabled}
               >
                 {tiposLicencia.map((tipo) => (
@@ -337,7 +358,7 @@ export default function ActualizarPiloto() {
               name="numeroLicencia"
               value={formData.numeroLicencia}
               onChange={handleChange}
-              disabled
+              disabled={!formEnabled}
             />
             
             <div>
@@ -424,7 +445,9 @@ export default function ActualizarPiloto() {
         title="Resultado de la Operación"
       >
         <p>{modalMessage}</p>
-        <Button onClick={handleCloseModal}>Cerrar</Button>
+        <div className="flex justify-end mt-4">
+          <Button onClick={handleCloseModal}>Cerrar</Button>
+        </div>
       </Modal>
     </div>
   );

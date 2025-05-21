@@ -104,8 +104,14 @@ export default function ReasignarGuardia() {
 
       setModalOpen(true);
     } catch (error) {
-      console.error("Error al reasignar el guardia:", error);
-      setModalMessage("⚠️ Error al reasignar el guardia.");
+      console.error("Error al reasignar el guardia:", error);    
+        let errorMsg = "❌ Error al reasignar el guardia.";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+  setModalMessage(errorMsg);
       setModalOpen(true);
     }
   };
@@ -183,7 +189,7 @@ export default function ReasignarGuardia() {
             </div>
 
             <Input
-              label="CUI del Guardia (13 dígitos) *"
+              label="CUI del Guardia *"
               name="cui"
               value={formData.cui}
               onChange={handleChange}

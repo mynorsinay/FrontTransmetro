@@ -83,7 +83,13 @@ export default function AsignarBuses() {
       });
     } catch (error) {
       console.error("Error al asignar el bus:", error);
-      setModalMessage("❌ Error al asignar el bus.");
+        let errorMsg = "❌ Error al asignar el bus";
+        if (error.response && error.response.data && typeof error.response.data === "string") {
+          errorMsg = `❌ ${error.response.data}`;
+        } else if (error.response && error.response.data?.mensaje) {
+          errorMsg = `❌ ${error.response.data.mensaje}`;
+        }
+  setModalMessage(errorMsg);
       setModalOpen(true);
     } finally {
       setLoading(false);

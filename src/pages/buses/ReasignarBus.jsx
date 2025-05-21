@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
-import api from "../../services/api"; 
-import { useNavigate } from "react-router-dom"; 
+import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function ReasignarBuses() {
   const navigate = useNavigate();
@@ -18,30 +17,32 @@ export default function ReasignarBuses() {
 
   const [rutas, setRutas] = useState([]);
   const [pilotos, setPilotos] = useState([]);
+  const [busesDisponibles, setBusesDisponibles] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Obtener listas de rutas y pilotos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Obtener rutas
-        const resRutas = await api.post("/Rutas/ConsuntarRutaConMunicipalidad", {});
-        setRutas(resRutas.data);
-        
-        // Obtener pilotos
-        const resPilotos = await api.post("/Pilotos/ConsultarPilotos", {});
-        setPilotos(resPilotos.data);
-      } catch (error) {
-        console.error("Error al obtener datos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Función para obtener rutas, pilotos y placas disponibles
+  const fetchData = async () => {
+    try {
+      setLoading(true);
 
+      const resRutas = await api.post("/Rutas/ConsuntarRutaConMunicipalidad", {});
+      setRutas(resRutas.data);
+
+      const resPilotos = await api.post("/Pilotos/ConsultarPilotos", {});
+      setPilotos(resPilotos.data);
+
+      const resBuses = await api.post("/Buses/BusesDispoAsignacion", {});
+      setBusesDisponibles(resBuses.data);
+    } catch (error) {
+      console.error("Error al obtener datos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -69,17 +70,31 @@ export default function ReasignarBuses() {
         Placa: "",
       });
     } catch (error) {
-      console.error("Error al reasignar el bus:", error);
-      setModalMessage("❌ Error al reasignar el bus.");
-      setModalOpen(true);
-    } finally {
+  console.error("Error al reasignar el bus:", error);
+
+  // Extraer mensaje del backend si existe
+  let errorMsg = "❌ Error al reasignar el bus.";
+  if (error.response && error.response.data && typeof error.response.data === "string") {
+    errorMsg = `❌ ${error.response.data}`;
+  } else if (error.response && error.response.data?.mensaje) {
+    errorMsg = `❌ ${error.response.data.mensaje}`;
+  }
+
+  setModalMessage(errorMsg);
+  setModalOpen(true);
+} finally {
       setLoading(false);
     }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    window.location.reload();
+    setFormData({
+      IdRuta: "",
+      IdPiloto: "",
+      Placa: "",
+    });
+    fetchData(); // Refresca las listas actualizadas
   };
 
   return (
@@ -99,6 +114,7 @@ export default function ReasignarBuses() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Select Ruta */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Ruta</label>
               <select
@@ -111,12 +127,13 @@ export default function ReasignarBuses() {
                 <option value="">Seleccione una ruta</option>
                 {rutas.map((ruta) => (
                   <option key={ruta.idRuta} value={ruta.idRuta}>
-                    {ruta.nombre} 
+                    {ruta.nombre}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Select Piloto */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Piloto</label>
               <select
@@ -135,15 +152,25 @@ export default function ReasignarBuses() {
               </select>
             </div>
 
-            <Input
-              label="Placa"
-              name="Placa"
-              value={formData.Placa}
-              onChange={handleChange}
-              placeholder="Ingrese la placa del bus a reasignar"
-              required
-            />
-            
+            {/* Select Placa (en lugar de Input) */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Placa del Bus</label>
+              <select
+                name="Placa"
+                value={formData.Placa}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                required
+              >
+                <option value="">Seleccione una placa</option>
+                {busesDisponibles.map((bus) => (
+                  <option key={bus.idBus} value={bus.placa}>
+                    {bus.placa}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-end">
               <Button type="submit" disabled={loading}>
                 {loading ? "Reasignando..." : "Reasignar Bus"}
@@ -154,9 +181,9 @@ export default function ReasignarBuses() {
       </Card>
 
       {/* Modal de resultados */}
-      <Modal 
-        isOpen={modalOpen} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
         title="Resultado de la Reasignación"
       >
         <p className="mb-4">{modalMessage}</p>
