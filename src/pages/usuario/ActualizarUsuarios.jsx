@@ -20,6 +20,7 @@ export default function ActualizarUsuarios() {
     telefono: "",
   });
 
+  const [usuariosDisponibles, setUsuariosDisponibles] = useState([]);
   const [modalOpen, setModalOpen] = useState({
     isOpen: false,
     isSuccess: false
@@ -27,13 +28,45 @@ export default function ActualizarUsuarios() {
   const [modalMessage, setModalMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [formEnabled, setFormEnabled] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [cargandoUsuarios, setCargandoUsuarios] = useState(false);
 
-  const handleChange = (e) => {
+  // Obtener usuarios disponibles al cargar el componente
+  useEffect(() => {
+    const obtenerUsuarios = async () => {
+      try {
+        setCargandoUsuarios(true);
+        const res = await api.post("/Usuarios/UsuariosDispo", {});
+        setUsuariosDisponibles(res.data || []);
+      } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+        setModalMessage("❌ Error al cargar la lista de usuarios");
+        setModalOpen({ isOpen: true, isSuccess: false });
+      } finally {
+        setCargandoUsuarios(false);
+      }
+    };
+
+    obtenerUsuarios();
+  }, []);
+
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     
-    // Validaciones en tiempo real
+    // Si es el select de nombreUsuario
+    if (name === "nombreUsuario") {
+      setFormData(prev => ({ ...prev, nombreUsuario: value }));
+      
+      if (value) {
+        // Consultar usuario si se selecciona uno
+        await consultarUsuario(value);
+      } else {
+        // Limpiar formulario si se selecciona "Seleccione un usuario"
+        limpiarFormulario();
+      }
+      return;
+    }
+    
+    // Validaciones en tiempo real para otros campos
     if (["primerNombre", "segundoNombre", "primerApellido", "segundoApellido"].includes(name)) {
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) return;
     }
@@ -53,16 +86,24 @@ export default function ActualizarUsuarios() {
     }
   };
 
-  const consultarUsuario = async () => {
-    if (!formData.nombreUsuario.trim()) {
-      setModalMessage("Por favor ingrese un nombre de usuario para consultar");
-      setModalOpen({ isOpen: true, isSuccess: false });
-      return;
-    }
+  const limpiarFormulario = () => {
+    setFormData({
+      nombreUsuario: "",
+      primerNombre: "",
+      segundoNombre: "",
+      primerApellido: "",
+      segundoApellido: "",
+      email: "",
+      telefono: "",
+    });
+    setErrors({});
+    setFormEnabled(false);
+  };
 
+  const consultarUsuario = async (nombreUsuario) => {
     try {
       const res = await api.post("/Usuarios/ConsultarUsuarios", { 
-        nombreUsuario: formData.nombreUsuario 
+        nombreUsuario 
       });
       
       if (res.data && res.data.length > 0) {
@@ -76,16 +117,15 @@ export default function ActualizarUsuarios() {
           email: usuario.email || "",
           telefono: usuario.telefono || ""
         });
-        setModalMessage("Usuario encontrado. Puede editar los campos habilitados.");
         setFormEnabled(true);
       } else {
-        setModalMessage("No se encontró ningún usuario con ese nombre");
+        setModalMessage("No se encontró información para el usuario seleccionado");
+        setModalOpen({ isOpen: true, isSuccess: false });
         setFormEnabled(false);
       }
-      setModalOpen({ isOpen: true, isSuccess: false });
     } catch (error) {
       console.error("Error al consultar el usuario:", error);
-      setModalMessage("Error al consultar el usuario");
+      setModalMessage(`Error al consultar el usuario: ${error.response?.data?.message || error.message}`);
       setModalOpen({ isOpen: true, isSuccess: false });
       setFormEnabled(false);
     }
@@ -142,9 +182,12 @@ export default function ActualizarUsuarios() {
 
     try {
       const res = await api.post("/Usuarios/ActualizarUsuario", formData);
-      console.log("Usuario actualizado: ", res.data);
       setModalMessage("✅ El usuario ha sido actualizado correctamente.");
       setModalOpen({ isOpen: true, isSuccess: true });
+      
+      // Actualizar lista de usuarios después de actualizar
+      const updatedList = await api.post("/Usuarios/UsuariosDispo", {});
+      setUsuariosDisponibles(updatedList.data || []);
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
       setModalMessage(`⚠️ ${error.response?.data?.message || "Error al actualizar el usuario"}`);
@@ -157,14 +200,6 @@ export default function ActualizarUsuarios() {
     if (modalOpen.isSuccess) {
       navigate("/usuarios");
     }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -181,24 +216,26 @@ export default function ActualizarUsuarios() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <Input
-                  label="Nombre de Usuario *"
-                  name="nombreUsuario"
-                  value={formData.nombreUsuario}
-                  onChange={handleChange}
-                  error={errors.nombreUsuario}
-                />
-                {errors.nombreUsuario && <p className="text-red-500 text-sm mt-1">{errors.nombreUsuario}</p>}
-              </div>
-              <Button 
-                type="button" 
-                onClick={consultarUsuario}
-                className="h-[42px]"
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Seleccione el Usuario a Actualizar *
+              </label>
+              <select
+                name="nombreUsuario"
+                value={formData.nombreUsuario}
+                onChange={handleChange}
+                className={`w-full p-2 border ${errors.nombreUsuario ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-[#01ff09] focus:border-[#01ff09]`}
+                disabled={cargandoUsuarios}
               >
-                Consultar
-              </Button>
+                <option value="">Seleccione un usuario</option>
+                {usuariosDisponibles.map((usuario) => (
+                  <option key={usuario.usuario} value={usuario.usuario}>
+                    {usuario.usuario}
+                  </option>
+                ))}
+              </select>
+              {errors.nombreUsuario && <p className="text-red-500 text-sm mt-1">{errors.nombreUsuario}</p>}
+              {cargandoUsuarios && <p className="text-sm text-gray-500">Cargando usuarios...</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
