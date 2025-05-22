@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api";
@@ -13,23 +12,32 @@ export default function DeshabilitarGuardia() {
     CUI: "", // CUI obligatorio
   });
 
+  const [guardiasDisponibles, setGuardiasDisponibles] = useState([]);
+  const [cargando, setCargando] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
+  // Obtener guardias disponibles al cargar el componente
+  useEffect(() => {
+    const obtenerGuardiasDisponibles = async () => {
+      try {
+        setCargando(true);
+        const res = await api.post("/Guardias/GuardiasDispo", {});
+        setGuardiasDisponibles(res.data || []);
+      } catch (error) {
+        console.error("Error al obtener guardias disponibles:", error);
+        setModalMessage("❌ Error al cargar la lista de guardias");
+        setModalOpen(true);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    obtenerGuardiasDisponibles();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Validar que solo sean números y máximo 13 dígitos
-    if (name === "CUI") {
-      if (/^\d{0,13}$/.test(value)) {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
-      return;
-    }
-    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -40,35 +48,37 @@ export default function DeshabilitarGuardia() {
     e.preventDefault();
 
     if (!formData.CUI) {
-      setModalMessage("⚠️ Por favor ingrese el CUI del guardia a deshabilitar.");
-      setModalOpen(true);
-      return;
-    }
-
-    if (formData.CUI.length !== 13) {
-      setModalMessage("⚠️ El CUI debe tener exactamente 13 dígitos.");
+      setModalMessage("⚠️ Por favor seleccione un guardia de la lista");
       setModalOpen(true);
       return;
     }
 
     try {
+      setCargando(true);
       const res = await api.post("/Guardias/DeshabilitarGuardias", formData);
-      console.log("Guardia deshabilitado: ", res.data);
-      setModalMessage("✅ El guardia ha sido deshabilitado correctamente.");
+      
+      if (res.status === 200) {
+        setModalMessage("✅ El guardia ha sido deshabilitado correctamente.");
+        // Actualizar la lista después de deshabilitar
+        const updatedList = await api.post("/Guardias/GuardiasDispo", {});
+        setGuardiasDisponibles(updatedList.data || []);
+      } else {
+        setModalMessage("❌ No se pudo deshabilitar el guardia.");
+      }
+      
       setModalOpen(true);
+      setFormData({ CUI: "" }); // Limpiar el formulario
     } catch (error) {
       console.error("Error al deshabilitar el guardia:", error);
-      setModalMessage("⚠️ Error al deshabilitar el guardia.");
+      setModalMessage(`⚠️ ${error.response?.data?.message || "Error al deshabilitar el guardia"}`);
       setModalOpen(true);
+    } finally {
+      setCargando(false);
     }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    // Recargar la página solo si fue un éxito
-    if (modalMessage.includes("✅")) {
-      window.location.reload();
-    }
   };
 
   return (
@@ -85,15 +95,32 @@ export default function DeshabilitarGuardia() {
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="CUI del Guardia"
-              name="CUI"
-              value={formData.CUI}
-              onChange={handleChange}
-              maxLength={13}
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Seleccione el Guardia a Deshabilitar *
+              </label>
+              <select
+                name="CUI"
+                value={formData.CUI}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#01ff09] focus:border-[#01ff09]"
+                disabled={cargando}
+              >
+                <option value="">Seleccione un guardia</option>
+                {guardiasDisponibles.map((guardia) => (
+                  <option key={guardia.cuiGuardia} value={guardia.cuiGuardia}>
+                    {guardia.cuiGuardia} - {guardia.nombre}
+                  </option>
+                ))}
+              </select>
+              {cargando && (
+                <p className="text-sm text-gray-500">Cargando guardias disponibles...</p>
+              )}
+            </div>
             <div className="flex justify-end">
-              <Button type="submit">Deshabilitar Guardia</Button>
+              <Button type="submit" disabled={cargando}>
+                {cargando ? "Deshabilitando..." : "Deshabilitar Guardia"}
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -105,8 +132,8 @@ export default function DeshabilitarGuardia() {
         onClose={handleCloseModal}
         title="Resultado de la Deshabilitación"
       >
-        <p>{modalMessage}</p>
-        <div className="flex justify-end mt-4">
+        <p className="mb-4">{modalMessage}</p>
+        <div className="flex justify-end">
           <Button onClick={handleCloseModal}>Cerrar</Button>
         </div>
       </Modal>

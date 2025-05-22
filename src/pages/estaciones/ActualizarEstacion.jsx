@@ -5,6 +5,7 @@ import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import { Card, CardContent } from "../../components/ui/card";
+import Header from "../../components/ui/Header";
 
 export default function ActualizarEstacion() {
   const navigate = useNavigate();
@@ -138,6 +139,8 @@ export default function ActualizarEstacion() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Actualizar Estación</h2>
+
+    <Header titulo="Actualizar Estación" fechaHora={new Date()} /> 
 
       <div className="mb-4">
         <Button onClick={() => navigate("/estaciones")}>⬅️ Regresar</Button>
