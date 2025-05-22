@@ -4,6 +4,7 @@ import api from "../../services/api";
 import Modal from "../../components/ui/Modal";
 import { Card, CardContent } from "../../components/ui/card";
 import Button from "../../components/ui/Button";
+import Header from "../../components/ui/Header";
 
 export default function RegistrarDistancia() {
   const navigate = useNavigate(); 
@@ -126,6 +127,8 @@ export default function RegistrarDistancia() {
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Registrar Distancia</h2>
 
+      <Header titulo="Registrar Distancia" fechaHora={new Date()} />
+      
       <div className="mb-4">
         <Button onClick={() => navigate("/distancias")}>⬅️ Regresar</Button>
       </div>

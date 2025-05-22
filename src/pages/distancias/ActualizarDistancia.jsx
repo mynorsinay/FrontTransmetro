@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
+import Header from "../../components/ui/Header";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api";
@@ -199,6 +200,8 @@ export default function ActualizarDistancia() {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Actualizar Distancia</h2>
+
+      <Header titulo="Actualizar Distancia" fechaHora={new Date()} />
 
       <div className="mb-4">
         <Button onClick={() => navigate("/distancias")}>⬅️ Regresar</Button>

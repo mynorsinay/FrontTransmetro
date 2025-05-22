@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../../components/ui/card";
 import Header from "../../components/ui/Header";
-import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api";
@@ -17,17 +16,20 @@ export default function ReasignarGuardia() {
 
   const [estaciones, setEstaciones] = useState([]);
   const [horarios, setHorarios] = useState([]);
+  const [guardiasPorAsignar, setGuardiasPorAsignar] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [assignedGuard, setAssignedGuard] = useState(null);
   const [cargandoEstaciones, setCargandoEstaciones] = useState(false);
   const [cargandoHorarios, setCargandoHorarios] = useState(false);
+  const [cargandoGuardias, setCargandoGuardias] = useState(false);
 
-  // Cargar estaciones y horarios al montar el componente
+  // Cargar estaciones, horarios y guardias por asignar al montar el componente
   useEffect(() => {
     const cargarDatos = async () => {
       setCargandoEstaciones(true);
       setCargandoHorarios(true);
+      setCargandoGuardias(true);
       
       try {
         // Cargar estaciones
@@ -37,6 +39,10 @@ export default function ReasignarGuardia() {
         // Cargar horarios
         const resHorarios = await api.post("/Horarios/ConsultarHorarios", {});
         setHorarios(resHorarios.data || []);
+
+        // Cargar guardias por asignar
+        const resGuardias = await api.post("/Guardias/GuardiasPorAsignar", {});
+        setGuardiasPorAsignar(resGuardias.data || []);
         
       } catch (error) {
         console.error("Error al cargar datos:", error);
@@ -45,6 +51,7 @@ export default function ReasignarGuardia() {
       } finally {
         setCargandoEstaciones(false);
         setCargandoHorarios(false);
+        setCargandoGuardias(false);
       }
     };
 
@@ -53,18 +60,6 @@ export default function ReasignarGuardia() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Validar que solo sean números para el CUI y máximo 13 dígitos
-    if (name === "cui") {
-      if (/^\d{0,13}$/.test(value)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
-      return;
-    }
-    
     setFormData(prev => ({
       ...prev,
       [name]: value,
@@ -77,12 +72,6 @@ export default function ReasignarGuardia() {
     // Validaciones
     if (!formData.idHorario || !formData.idEstacion || !formData.cui) {
       setModalMessage("⚠️ Todos los campos son obligatorios para reasignar.");
-      setModalOpen(true);
-      return;
-    }
-
-    if (formData.cui.length !== 13) {
-      setModalMessage("⚠️ El CUI debe tener exactamente 13 dígitos.");
       setModalOpen(true);
       return;
     }
@@ -105,13 +94,13 @@ export default function ReasignarGuardia() {
       setModalOpen(true);
     } catch (error) {
       console.error("Error al reasignar el guardia:", error);    
-        let errorMsg = "❌ Error al reasignar el guardia.";
-        if (error.response && error.response.data && typeof error.response.data === "string") {
-          errorMsg = `❌ ${error.response.data}`;
-        } else if (error.response && error.response.data?.mensaje) {
-          errorMsg = `❌ ${error.response.data.mensaje}`;
-        }
-  setModalMessage(errorMsg);
+      let errorMsg = "❌ Error al reasignar el guardia.";
+      if (error.response && error.response.data && typeof error.response.data === "string") {
+        errorMsg = `❌ ${error.response.data}`;
+      } else if (error.response && error.response.data?.mensaje) {
+        errorMsg = `❌ ${error.response.data.mensaje}`;
+      }
+      setModalMessage(errorMsg);
       setModalOpen(true);
     }
   };
@@ -188,17 +177,35 @@ export default function ReasignarGuardia() {
               )}
             </div>
 
-            <Input
-              label="CUI del Guardia *"
-              name="cui"
-              value={formData.cui}
-              onChange={handleChange}
-              maxLength={13}
-              required
-            />
+            {/* Selector de Guardia */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Guardia a Reasignar *
+              </label>
+              <select
+                name="cui"
+                value={formData.cui}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#01ff09] focus:border-[#01ff09]"
+                disabled={cargandoGuardias}
+                required
+              >
+                <option value="">Seleccione un guardia</option>
+                {guardiasPorAsignar.map((guardia) => (
+                  <option key={guardia.cuiGuardia} value={guardia.cuiGuardia}>
+                    {guardia.cuiGuardia} - {guardia.nombre}
+                  </option>
+                ))}
+              </select>
+              {cargandoGuardias && (
+                <p className="text-sm text-gray-500">Cargando guardias disponibles...</p>
+              )}
+            </div>
 
             <div className="flex justify-end">
-              <Button type="submit">Reasignar Guardia</Button>
+              <Button type="submit" disabled={cargandoEstaciones || cargandoHorarios || cargandoGuardias}>
+                {cargandoEstaciones || cargandoHorarios || cargandoGuardias ? "Cargando..." : "Reasignar Guardia"}
+              </Button>
             </div>
           </form>
         </CardContent>
