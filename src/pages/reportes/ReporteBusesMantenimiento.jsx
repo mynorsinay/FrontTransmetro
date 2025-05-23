@@ -33,16 +33,18 @@ export default function ReporteBusesMantenimiento() {
             <thead>
               <tr className="bg-[#01ff09] text-white">
                 <th className="px-4 py-2 text-left">Placa</th>
-                <th className="px-4 py-2 text-left">Fecha</th>
-                <th className="px-4 py-2 text-left">Motivo</th>
+                <th className="px-4 py-2 text-left">Fecha Inicio</th>
+                <th className="px-4 py-2 text-left">Fecha Fin</th>
+                <th className="px-4 py-2 text-left">Costo</th>
               </tr>
             </thead>
             <tbody>
               {registros.map((bus, index) => (
                 <tr key={index} className="border-t">
-                  <td className="px-4 py-2">{bus.placa || "Desconocida"}</td>
-                  <td className="px-4 py-2">{bus.fecha || "Sin fecha"}</td>
-                  <td className="px-4 py-2">{bus.motivo || "Sin especificar"}</td>
+                  <td className="px-4 py-2">{bus.placa }</td>
+                  <td className="px-4 py-2">{bus.fechaInicio }</td>
+                  <td className="px-4 py-2">{bus.fechaFin }</td>
+                  <td className="px-4 py-2">{bus.costoTotal }</td>
                 </tr>
               ))}
             </tbody>

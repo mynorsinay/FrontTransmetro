@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 
-export default function ReportePilotos() {
+export default function ReporteBusesMantenimiento() {
     const [registros, setRegistros] = useState([]);
     const [error, setError] = useState("");
 
     const obtenerHistorial = async () => {
         try {
-            const res = await api.post("/pilotos/ConsultarPilotos", {});
+            const res = await api.post("/Guardias/GuardiasAsignados", {});
             setRegistros(res.data || []);
             setError("");
         } catch (err) {
             console.error(err);
             setRegistros([]);
-            setError("⚠️ Error al obtener el historial de pilotos.");
+            setError("⚠️ Error al obtener el historial de guardias.");
         }
     };
 
@@ -23,7 +23,7 @@ export default function ReportePilotos() {
 
     return (
         <div>
-            <h2 className="text-xl font-semibold mb-4">👨‍✈️ Pilotos</h2>
+            <h2 className="text-xl font-semibold mb-4">🛡️ Guardias</h2>
 
             {error && <p className="text-red-600">{error}</p>}
 
@@ -34,21 +34,21 @@ export default function ReportePilotos() {
                             <tr className="bg-[#01ff09] text-white">
                                 <th className="px-4 py-2 text-left">Nombre</th>
                                 <th className="px-4 py-2 text-left">CUI</th>
-                                <th className="px-4 py-2 text-left">Tipo de Licencia</th>
-                                <th className="px-4 py-2 text-left">Vencimiento de Licencia</th>
-                                <th className="px-4 py-2 text-left">Correo</th>
-                                <th className="px-4 py-2 text-left">Teléfono</th>
+                                <th className="px-4 py-2 text-left">Ruta Asignada</th>
+                                <th className="px-4 py-2 text-left">Estación</th>
+                                <th className="px-4 py-2 text-left">Horario L-V</th>
+                                <th className="px-4 py-2 text-left">Horario S-D</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {registros.map((pilotos, index) => (
+                            {registros.map((guardias, index) => (
                                 <tr key={index} className="border-t">
-                                    <td className="px-4 py-2">{pilotos.primerNombre } {pilotos.primerApellido }</td>
-                                    <td className="px-4 py-2">{pilotos.cui }</td>  
-                                    <td className="px-4 py-2">{pilotos.tipoLicencia }</td>
-                                    <td className="px-4 py-2">{pilotos.vencimientoLicencia }</td>
-                                    <td className="px-4 py-2">{pilotos.correo }</td>
-                                    <td className="px-4 py-2">{pilotos.telefono }</td>                                 
+                                    <td className="px-4 py-2">{guardias.nombre }</td>
+                                    <td className="px-4 py-2">{guardias.cui }</td>
+                                    <td className="px-4 py-2">{guardias.ruta }</td>
+                                    <td className="px-4 py-2">{guardias.estacion }</td>
+                                    <td className="px-4 py-2">{guardias.horaLV }</td>
+                                    <td className="px-4 py-2">{guardias.horaSD }</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -57,7 +57,7 @@ export default function ReportePilotos() {
             ) : (
                 !error && (
                     <p className="text-gray-600">
-                        No hay registros recientes de pilotos.
+                        No hay registros recientes de guardias.
                     </p>
                 )
             )}

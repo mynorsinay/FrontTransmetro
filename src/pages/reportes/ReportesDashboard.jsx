@@ -3,12 +3,21 @@ import ReporteGeneral from "./ReporteGeneral";
 import ReporteBusesMantenimiento from "./ReporteBusesMantenimiento";
 import ReportePilotosPorRuta from "./ReportePilotosPorRuta";
 import ReportePorFecha from "./ReportePorFecha";
+import ReporteBuses from "./ReporteBuses";
+import ReporteRutas from "./ReporteRutas";
+import ReporteUsuarios from "./ReporteUsuarios";
+import ReporteGuardias from "./ReporteGuardias";
+import ReporteEstaciones from "./ReporteEstaciones";
 
 const tabs = [
   { id: "general", label: "📊 General" },
-  { id: "buses", label: "🚌 Mantenimiento" },
-  { id: "pilotos", label: "👨‍✈️ Pilotos por Ruta" },
-  { id: "fecha", label: "🗓️ Por Fecha" }
+  { id: "buses", label: "🚌 Buses" },
+  { id: "pilotos", label: "👨‍✈️ Pilotos " },
+  { id: "Mantenimientos", label: "🛠️ Mantenimientos" },
+  { id: "rutas", label: "🛣️ Rutas" },
+  { id: "usuarios", label: " 👤 Usuarios" },
+  { id: "guardias", label: " 🛡️ Guardias" },
+  { id: "estaciones", label: "🏛️ Estaciones" }
 ];
 
 export default function ReportesDashboard() {
@@ -19,11 +28,19 @@ export default function ReportesDashboard() {
       case "general":
         return <ReporteGeneral />;
       case "buses":
-        return <ReporteBusesMantenimiento />;
+        return <ReporteBuses />;
       case "pilotos":
         return <ReportePilotosPorRuta />;
-      case "fecha":
-        return <ReportePorFecha />;
+      case "Mantenimientos":
+        return <ReporteBusesMantenimiento />;
+      case "rutas":
+        return <ReporteRutas />;
+      case "usuarios":
+        return <ReporteUsuarios />;
+      case "guardias":
+        return <ReporteGuardias />;
+      case "estaciones":
+        return <ReporteEstaciones />;
       default:
         return null;
     }
