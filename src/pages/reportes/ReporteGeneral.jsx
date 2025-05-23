@@ -6,23 +6,32 @@ export default function ReporteGeneral() {
     buses: 0,
     pilotos: 0,
     mantenimiento: 0,
-    rutas: 0
+    rutas: 0,
+    usuarios: 0,
+    guardias: 0,
+    estaciones:0,
   });
 
   const obtenerDatos = async () => {
     try {
-      const [busesRes, pilotosRes, mantenimientoRes, rutasRes] = await Promise.all([
+      const [busesRes, pilotosRes, mantenimientoRes, rutasRes,usuariosRes,guardiasRes,estacionesRes] = await Promise.all([
         api.post("/Buses/BusesAsignados", {}),
         api.post("/pilotos/ConsultarPilotos", {}),
         api.post("/Buses/HistorialMantenimientos", {}),
-        api.post("/Rutas/ConsuntarRutaConMunicipalidad", {})
+        api.post("/Rutas/ConsuntarRutaConMunicipalidad", {}),
+        api.post("/Usuarios/ConsultarUsuarios", {}),
+        api.post("/Guardias/GuardiasAsignados", {}),
+        api.post("/Estaciones/ConsultarEstaciones", {})
       ]);
 
       setDatos({
         buses: busesRes.data?.length || 0,
         pilotos: pilotosRes.data?.length || 0,
         mantenimiento: mantenimientoRes.data?.length || 0,
-        rutas: rutasRes.data?.length || 0
+        rutas: rutasRes.data?.length || 0,
+        usuarios: usuariosRes.data?.length || 0,    
+        guardias: guardiasRes.data?.length || 0,  
+        estaciones: estacionesRes.data?.length || 0,              
       });
     } catch (err) {
       console.error("⚠️ Error al obtener datos de reportes:", err);
@@ -37,7 +46,10 @@ export default function ReporteGeneral() {
     { label: "Buses Registrados", valor: datos.buses },
     { label: "Pilotos Activos", valor: datos.pilotos },
     { label: "Buses en Mantenimiento", valor: datos.mantenimiento },
-    { label: "Rutas Disponibles", valor: datos.rutas }
+    { label: "Rutas Disponibles", valor: datos.rutas },
+    { label: "Usuarios Registrados", valor: datos.usuarios },
+    { label: "Guardias Asignados", valor: datos.guardias },
+    { label: "Estaciones Disponibles", valor: datos.estaciones }
   ];
 
   return (
