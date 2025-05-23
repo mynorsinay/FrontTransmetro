@@ -10,9 +10,9 @@ export default function ActualizarDistancia() {
   const navigate = useNavigate();
   const [formulario, setFormulario] = useState({
     idDistancia: "",
-    Ruta: "",
-    EstacionInicio: "",
-    EstacionFin: "",
+    idRuta: "",
+    idEstacionInicio: "",
+    idEstacionFin: "",
     Recorrido: ""
   });
 
@@ -25,8 +25,8 @@ export default function ActualizarDistancia() {
     distancias: false,
     rutas: false,
     estaciones: false,
-    general: false,
-    seleccionando: false // Nuevo estado para controlar selección
+    guardando: false,
+    cargandoDetalle: false
   });
 
   // Cargar datos iniciales
@@ -35,11 +35,11 @@ export default function ActualizarDistancia() {
       try {
         setCargando(prev => ({...prev, distancias: true, rutas: true}));
         
-        // Cargar distancias
+        // Cargar distancias para el select
         const resDistancias = await api.post("/Distancias/ConsultarDistancias", {});
         setDistancias(resDistancias.data || []);
         
-        // Cargar rutas
+        // Cargar todas las rutas
         const resRutas = await api.post("/Rutas/ConsuntarRutaConMunicipalidad", {});
         setRutas(resRutas.data || []);
         
@@ -55,93 +55,83 @@ export default function ActualizarDistancia() {
     cargarDatosIniciales();
   }, []);
 
-  // Cargar estaciones cuando cambia la ruta seleccionada
-  const cargarEstacionesPorRuta = async (idRuta) => {
-    if (!idRuta) return;
-    
-    try {
-      setCargando(prev => ({...prev, estaciones: true}));
-      const res = await api.post("/Estaciones/ConsultarEstaciones", {
-        idRuta: parseInt(idRuta)
-      });
-      setEstaciones(res.data || []);
-      return res.data || []; // Devolver las estaciones cargadas
-    } catch (error) {
-      console.error("Error al cargar estaciones:", error);
-      setModalMessage("❌ Error al cargar estaciones");
-      setModalOpen(true);
-      return [];
-    } finally {
-      setCargando(prev => ({...prev, estaciones: false}));
-    }
-  };
-
   // Manejar selección de distancia
   const handleSelectDistancia = async (e) => {
     const idDistancia = e.target.value;
+    
     if (!idDistancia) {
       resetFormulario();
       return;
     }
 
     try {
-      setCargando(prev => ({...prev, seleccionando: true}));
+      setCargando(prev => ({...prev, cargandoDetalle: true}));
+      setEstaciones([]); // Limpiar estaciones anteriores
 
-      const distanciaSeleccionada = distancias.find(d => d.idDistancia === parseInt(idDistancia));
-      if (!distanciaSeleccionada) return;
+      // Consultar el endpoint específico
+      const response = await api.post("/Distancias/DistanciasXID", {
+        idDistancia: parseInt(idDistancia)
+      });
 
-      // 1. Primero actualizamos la ruta en el estado
-      setFormulario(prev => ({
-        ...prev,
-        idDistancia: distanciaSeleccionada.idDistancia,
-        Ruta: distanciaSeleccionada.idRuta,
-        Recorrido: distanciaSeleccionada.recorrido,
-        EstacionInicio: "", // Limpiar temporalmente
-        EstacionFin: "" // Limpiar temporalmente
-      }));
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No se encontraron datos para la distancia seleccionada");
+      }
 
-      // 2. Cargamos las estaciones para esa ruta (esperamos a que termine)
-      const estacionesCargadas = await cargarEstacionesPorRuta(distanciaSeleccionada.idRuta);
+      const distanciaDetalle = response.data[0];
 
-      // 3. Verificamos que las estaciones de la distancia existan en las cargadas
-      const estacionInicioValida = estacionesCargadas.some(e => e.idEstacion === distanciaSeleccionada.idEstacionInicio);
-      const estacionFinValida = estacionesCargadas.some(e => e.idEstacion === distanciaSeleccionada.idEstacionFin);
+      // Buscar la ruta correspondiente por nombre
+      const rutaSeleccionada = rutas.find(r => r.nombre === distanciaDetalle.ruta);
+      if (!rutaSeleccionada) {
+        throw new Error(`No se encontró la ruta: ${distanciaDetalle.ruta}`);
+      }
 
-      // 4. Actualizamos el formulario con los valores finales
-      setFormulario(prev => ({
-        ...prev,
-        EstacionInicio: estacionInicioValida ? distanciaSeleccionada.idEstacionInicio : "",
-        EstacionFin: estacionFinValida ? distanciaSeleccionada.idEstacionFin : ""
-      }));
+      // Cargar estaciones para la ruta seleccionada
+      const resEstaciones = await api.post("/Estaciones/ConsultarEstaciones", {
+        idRuta: parseInt(rutaSeleccionada.idRuta)
+      });
+
+      const estacionesCargadas = resEstaciones.data || [];
+      setEstaciones(estacionesCargadas);
+
+      // Buscar estaciones por nombre (eliminando duplicados)
+      const estacionesUnicas = estacionesCargadas.filter(
+        (estacion, index, self) =>
+          index === self.findIndex(e => e.nombre === estacion.nombre)
+      );
+
+      // Buscar IDs de estaciones
+      const estacionInicio = estacionesUnicas.find(e => e.nombre === distanciaDetalle.estacionInicio);
+      const estacionFin = estacionesUnicas.find(e => e.nombre === distanciaDetalle.estacionFin);
+
+      if (!estacionInicio || !estacionFin) {
+        throw new Error("No se encontraron las estaciones correspondientes");
+      }
+
+      // Actualizar formulario
+      setFormulario({
+        idDistancia: idDistancia,
+        idRuta: rutaSeleccionada.idRuta.toString(),
+        idEstacionInicio: estacionInicio.idEstacion.toString(),
+        idEstacionFin: estacionFin.idEstacion.toString(),
+        Recorrido: distanciaDetalle.recorrido || ""
+      });
 
     } catch (error) {
-      console.error("Error al seleccionar distancia:", error);
-      setModalMessage("❌ Error al cargar los datos de la distancia");
+      console.error("Error al cargar detalles:", error);
+      setModalMessage(`❌ Error: ${error.message}`);
       setModalOpen(true);
+      resetFormulario();
     } finally {
-      setCargando(prev => ({...prev, seleccionando: false}));
+      setCargando(prev => ({...prev, cargandoDetalle: false}));
     }
-  };
-
-  // Manejar cambio de ruta manual
-  const handleChangeRuta = async (e) => {
-    const nuevaRuta = e.target.value;
-    setFormulario(prev => ({
-      ...prev,
-      Ruta: nuevaRuta,
-      EstacionInicio: "",
-      EstacionFin: ""
-    }));
-    
-    await cargarEstacionesPorRuta(nuevaRuta);
   };
 
   const resetFormulario = () => {
     setFormulario({
       idDistancia: "",
-      Ruta: "",
-      EstacionInicio: "",
-      EstacionFin: "",
+      idRuta: "",
+      idEstacionInicio: "",
+      idEstacionFin: "",
       Recorrido: ""
     });
     setEstaciones([]);
@@ -162,28 +152,29 @@ export default function ActualizarDistancia() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formulario.EstacionInicio === formulario.EstacionFin) {
+    if (formulario.idEstacionInicio === formulario.idEstacionFin) {
       setModalMessage("❌ Las estaciones de inicio y fin deben ser diferentes");
       setModalOpen(true);
       return;
     }
 
     try {
-      setCargando(prev => ({...prev, general: true}));
+      setCargando(prev => ({...prev, guardando: true}));
       const res = await api.post("/Distancias/ActualizarDistancia", formulario);
 
       if (res.status === 200) {
         setModalMessage("✅ Distancia actualizada correctamente");
         setModalOpen(true);
-        // Recargar distancias
+        // Recargar lista de distancias
         const resDistancias = await api.post("/Distancias/ConsultarDistancias", {});
         setDistancias(resDistancias.data || []);
+        resetFormulario();
       } else {        
-        let errorMsg = " ❌  No se pudo actualizar la distancia.";
-        if (error.response && error.response.data && typeof error.response.data === "string") {
-          errorMsg = `❌ ${error.response.data}`;
-        } else if (error.response && error.response.data?.mensaje) {
-          errorMsg = `❌ ${error.response.data.mensaje}`;
+        let errorMsg = "❌ No se pudo actualizar la distancia.";
+        if (res.data && typeof res.data === "string") {
+          errorMsg = `❌ ${res.data}`;
+        } else if (res.data?.mensaje) {
+          errorMsg = `❌ ${res.data.mensaje}`;
         }
         setModalMessage(errorMsg);
         setModalOpen(true);
@@ -193,8 +184,21 @@ export default function ActualizarDistancia() {
       setModalMessage("⚠️ Error al actualizar la distancia");
       setModalOpen(true);
     } finally {
-      setCargando(prev => ({...prev, general: false}));
+      setCargando(prev => ({...prev, guardando: false}));
     }
+  };
+
+  // Obtener la ruta seleccionada
+  const getRutaSeleccionada = () => {
+    return rutas.find(r => r.idRuta === parseInt(formulario.idRuta)) || { nombre: "" };
+  };
+
+  // Filtrar estaciones únicas por nombre
+  const getEstacionesUnicas = () => {
+    return estaciones.filter(
+      (estacion, index, self) =>
+        index === self.findIndex(e => e.nombre === estacion.nombre)
+    );
   };
 
   return (
@@ -215,9 +219,9 @@ export default function ActualizarDistancia() {
               <label className="block text-sm font-medium">Seleccionar Distancia</label>
               <select
                 onChange={handleSelectDistancia}
-                value={formulario.idDistancia || ""}
+                value={formulario.idDistancia}
                 className="w-full p-2 border border-gray-300 rounded"
-                disabled={cargando.distancias || cargando.seleccionando}
+                disabled={cargando.distancias || cargando.cargandoDetalle}
               >
                 <option value="">Seleccione una distancia</option>
                 {distancias.map(distancia => (
@@ -226,48 +230,34 @@ export default function ActualizarDistancia() {
                   </option>
                 ))}
               </select>
-              {(cargando.distancias || cargando.seleccionando) && (
-                <p className="text-sm text-gray-500">
-                  {cargando.seleccionando ? "Cargando datos de la distancia..." : "Cargando distancias..."}
-                </p>
-              )}
+              {cargando.distancias && <p className="text-sm text-gray-500">Cargando distancias...</p>}
             </div>
 
-            {/* Selector de Ruta */}
+            {/* Selector de Ruta (solo lectura) */}
             <div>
               <label className="block text-sm font-medium">Ruta</label>
               <select
-                name="Ruta"
-                value={formulario.Ruta}
-                onChange={handleChangeRuta}
-                className="w-full p-2 border border-gray-300 rounded"
-                required
-                disabled={cargando.rutas || !formulario.idDistancia || cargando.seleccionando}
+                className="w-full p-2 border border-gray-300 rounded "
+                disabled
               >
-                <option value="">Seleccione ruta</option>
-                {rutas.map(ruta => (
-                  <option key={ruta.idRuta} value={ruta.idRuta}>
-                    {ruta.nombre}
-                  </option>
-                ))}
+                <option value="">{formulario.idRuta ? getRutaSeleccionada().nombre : "Seleccione una distancia primero"}</option>
               </select>
-              {cargando.rutas && <p className="text-sm text-gray-500">Cargando rutas...</p>}
             </div>
 
             {/* Selector de Estación Inicio */}
             <div>
               <label className="block text-sm font-medium">Estación Inicio</label>
               <select
-                name="EstacionInicio"
-                value={formulario.EstacionInicio}
+                name="idEstacionInicio"
+                value={formulario.idEstacionInicio}
                 onChange={handleChange}
                 className="w-full p-2 border border-gray-300 rounded"
                 required
-                disabled={cargando.estaciones || !formulario.Ruta || cargando.seleccionando}
+                disabled={!formulario.idRuta || cargando.cargandoDetalle}
               >
                 <option value="">Seleccione estación</option>
-                {estaciones.map(estacion => (
-                  <option key={estacion.idEstacion} value={estacion.idEstacion}>
+                {getEstacionesUnicas().map(estacion => (
+                  <option key={`inicio-${estacion.idEstacion}`} value={estacion.idEstacion}>
                     {estacion.nombre}
                   </option>
                 ))}
@@ -279,16 +269,16 @@ export default function ActualizarDistancia() {
             <div>
               <label className="block text-sm font-medium">Estación Fin</label>
               <select
-                name="EstacionFin"
-                value={formulario.EstacionFin}
+                name="idEstacionFin"
+                value={formulario.idEstacionFin}
                 onChange={handleChange}
                 className="w-full p-2 border border-gray-300 rounded"
                 required
-                disabled={cargando.estaciones || !formulario.Ruta || cargando.seleccionando}
+                disabled={!formulario.idRuta || cargando.cargandoDetalle}
               >
                 <option value="">Seleccione estación</option>
-                {estaciones.map(estacion => (
-                  <option key={estacion.idEstacion} value={estacion.idEstacion}>
+                {getEstacionesUnicas().map(estacion => (
+                  <option key={`fin-${estacion.idEstacion}`} value={estacion.idEstacion}>
                     {estacion.nombre}
                   </option>
                 ))}
@@ -305,7 +295,7 @@ export default function ActualizarDistancia() {
                 onChange={handleRecorridoChange}
                 className="w-full p-2 border border-gray-300 rounded"
                 required
-                disabled={!formulario.idDistancia || cargando.seleccionando}
+                disabled={!formulario.idDistancia || cargando.cargandoDetalle}
                 placeholder="Ingrese distancia en kilometros"
               />
             </div>
@@ -313,10 +303,10 @@ export default function ActualizarDistancia() {
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={!formulario.idDistancia || cargando.general || cargando.seleccionando}
+                disabled={!formulario.idDistancia || cargando.guardando || cargando.cargandoDetalle}
               >
-                {cargando.general ? "Actualizando..." : 
-                 cargando.seleccionando ? "Cargando datos..." : "Actualizar Distancia"}
+                {cargando.guardando ? "Actualizando..." : 
+                 cargando.cargandoDetalle ? "Cargando datos..." : "Actualizar Distancia"}
               </Button>
             </div>
           </form>
