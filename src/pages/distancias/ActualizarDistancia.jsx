@@ -208,7 +208,7 @@ export default function ActualizarDistancia() {
       <Header titulo="Actualizar Distancia" fechaHora={new Date()} />
 
       <div className="mb-4">
-        <Button onClick={() => navigate("/distancias")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/distancias")}>⬅️ Regresar</Button>
       </div>
 
       <Card className="border border-[#01ff09]/50 rounded-2xl shadow-md hover:shadow-lg transition-shadow">

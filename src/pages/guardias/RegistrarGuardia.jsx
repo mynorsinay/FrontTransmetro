@@ -188,7 +188,7 @@ export default function RegistrarGuardia() {
       <Header titulo="Registrar Guardia" fechaHora={new Date()} />
 
       <div className="mb-4">
-        <Button onClick={() => navigate("/guardias")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/guardias")}>⬅️ Regresar</Button>
       </div>
 
       <Card>

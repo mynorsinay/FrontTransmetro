@@ -143,7 +143,7 @@ export default function ActualizarEstacion() {
     <Header titulo="Actualizar Estación" fechaHora={new Date()} /> 
 
       <div className="mb-4">
-        <Button onClick={() => navigate("/estaciones")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/estaciones")}>⬅️ Regresar</Button>
       </div>
 
       <Card>

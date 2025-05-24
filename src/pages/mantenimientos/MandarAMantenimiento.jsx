@@ -96,7 +96,7 @@ export default function MandarAMantenimiento() {
       <Header titulo="Mandar Bus a Mantenimiento" fechaHora={new Date()} />
 
       <div className="mb-4">
-        <Button onClick={() => navigate("/mantenimientos")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/mantenimientos")}>⬅️ Regresar</Button>
       </div>
 
       <Card>
