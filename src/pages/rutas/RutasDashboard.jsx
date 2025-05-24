@@ -14,12 +14,12 @@ export default function RutasDashboard() {
     {
       titulo: "Actualizar Ruta",
       icono: <PencilIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/rutas/actualizar",
+      ruta: "/app/rutas/actualizar",
     },
     {
       titulo: "Crear Ruta",
       icono: <PlusCircleIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/rutas/crear",
+      ruta: "/app/rutas/crear",
     },
   ];
 

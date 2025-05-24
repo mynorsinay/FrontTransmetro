@@ -23,14 +23,14 @@ export default function ConsultarEstaciones() {
       icono: (
         <PencilSquareIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />
       ),
-      ruta: "/estaciones/actualizar",
+      ruta: "/app/estaciones/actualizar",
     },
     {
       titulo: "Registrar Estación",
       icono: (
         <PlusCircleIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />
       ),
-      ruta: "/estaciones/registrar",
+      ruta: "/app/estaciones/registrar",
     },
   ];
 

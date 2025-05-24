@@ -56,17 +56,17 @@ export default function UsuariosDashboard() {
     {
       titulo: "Actualizar Usuario",
       icono: <UserCircleIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/usuarios/actualizar",
+      ruta: "/app/usuarios/actualizar",
     },
     {
       titulo: "Eliminar Usuario",
       icono: <UserMinusIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/usuarios/eliminar",
+      ruta: "/app/usuarios/eliminar",
     },
     {
       titulo: "Crear Usuario",
       icono: <UserPlusIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/usuarios/crear",
+      ruta: "/app/usuarios/crear",
     },
   ];
 

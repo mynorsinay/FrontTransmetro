@@ -14,22 +14,22 @@ export default function PilotosDashboard() {
     {
       titulo: "Actualizar Piloto",
       icono: <PencilIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/pilotos/actualizar",
+      ruta: "/app/pilotos/actualizar",
     },
     {
       titulo: "Crear Piloto",
       icono: <UserPlusIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/pilotos/crear",
+      ruta: "/app/pilotos/crear",
     },
     {
       titulo: "Deshabilitar Piloto",
       icono: <TrashIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/pilotos/eliminar",
+      ruta: "/app/pilotos/eliminar",
     },
     {
       titulo: "Habilitar Piloto",
       icono: <CheckCircleIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/pilotos/habilitar",
+      ruta: "/app/pilotos/habilitar",
     },
   ];
 
