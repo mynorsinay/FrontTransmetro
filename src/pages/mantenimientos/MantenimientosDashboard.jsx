@@ -53,7 +53,7 @@ export default function MantenimientosDashboard() {
     {
       titulo: "Mandar a Mantenimiento",
       icono: <WrenchScrewdriverIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/mantenimientos/mandaramantenimiento",
+      ruta: "/app/mantenimientos/mandaramantenimiento",
     },
   ];
 

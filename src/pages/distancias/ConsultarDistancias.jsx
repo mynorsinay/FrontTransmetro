@@ -19,14 +19,14 @@ export default function ConsultarDistancias() {
       icono: (
         <PencilSquareIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />
       ),
-      ruta: "/distancias/actualizar",
+      ruta: "/app/distancias/actualizar",
     },
     {
       titulo: "Registrar Distancia",
       icono: (
         <PlusCircleIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />
       ),
-      ruta: "/distancias/registrar",
+      ruta: "/app/distancias/registrar",
     },
   ];
 

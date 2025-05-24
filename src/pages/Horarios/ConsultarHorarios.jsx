@@ -19,7 +19,7 @@ export default function ConsultarHorarios() {
       icono: (
         <ClipboardDocumentListIcon className="w-10 h-10 text-[#01ff09] transition-transform duration-300 group-hover:scale-110" />
       ),
-      ruta: "/horarios/consultar",
+      ruta: "/app/horarios/consultar",
     },
   ];
 

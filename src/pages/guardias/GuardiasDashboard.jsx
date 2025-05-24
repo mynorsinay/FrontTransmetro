@@ -18,22 +18,22 @@ export default function GuardiasDashboard() {
     {
       titulo: "Deshabilitar Guardia",
       icono: <UserMinusIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/guardias/deshabilitar",
+      ruta: "/app/guardias/deshabilitar",
     },
     {
       titulo: "Habilitar Guardia",
       icono: <CheckCircleIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/guardias/habilitar",
+      ruta: "/app/guardias/habilitar",
     },
     {
       titulo: "Reasignar Guardia",
       icono: <ArrowPathIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/guardias/reasignar",
+      ruta: "/app/guardias/reasignar",
     },
     {
       titulo: "Registrar Guardia",
       icono: <UserPlusIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/guardias/registrar",
+      ruta: "/app/guardias/registrar",
     },
   ];
 

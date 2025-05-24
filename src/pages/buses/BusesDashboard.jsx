@@ -14,22 +14,22 @@ export default function BusesDashboard() {
     {
       titulo: "Asignar Bus",
       icono: <TruckIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/buses/asignar",
+      ruta: "/app/buses/asignar",
     },
     {
       titulo: "Deshabilitar Bus",
       icono: <StopIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/buses/deshabilitar",
+      ruta: "/app/buses/deshabilitar",
     },
     {
       titulo: "Habilitar Bus",
       icono: <PlayIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/buses/habilitar",
+      ruta: "/app/buses/habilitar",
     },
     {
       titulo: "Reasignar Bus",
       icono: <ArrowPathIcon className="w-10 h-10 text-[#01ff09] transform transition-transform duration-300 group-hover:scale-110" />,
-      ruta: "/buses/reasignar",
+      ruta: "/app/buses/reasignar",
     },
   ];
 
