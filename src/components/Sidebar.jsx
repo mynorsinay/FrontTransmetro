@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   HomeIcon,
   TruckIcon,
@@ -19,19 +20,20 @@ import {
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isAuthenticated, user } = useAuth(); 
 
   const links = [
-    { to: "/", icon: <HomeIcon className="w-6 h-6" />, label: "Inicio" },
-    { to: "/buses", icon: <TruckIcon className="w-6 h-6" />, label: "Buses" },
-    { to: "/pilotos/dashboard", icon: <ClipboardDocumentListIcon className="w-6 h-6" />, label: "Pilotos" },
-    { to: "/rutas/dashboard", icon: <MapIcon className="w-6 h-6" />, label: "Rutas" },
-    { to: "/reportes", icon: <ChartPieIcon className="w-6 h-6" />, label: "Reportes" },
-    { to: "/usuarios", icon: <UsersIcon className="w-6 h-6" />, label: "Usuarios" },
-    { to: "/guardias", icon: <ShieldExclamationIcon className="w-6 h-6" />, label: "Guardias" },
-    { to: "/mantenimientos", icon: <WrenchScrewdriverIcon className="w-6 h-6" />, label: "Mantenimientos" },
-    { to: "/estaciones", icon: <BuildingLibraryIcon className="w-6 h-6" />, label: "Estaciones" },
-    { to: "/distancias", icon: <MapPinIcon className="w-6 h-6" />, label: "Distancias" },
-    { to: "/horarios", icon: <ClockIcon className="w-6 h-6" />, label: "Horarios" },
+    { to: "/app", icon: <HomeIcon className="w-6 h-6" />, label: "Inicio" },
+    { to: "/app/buses", icon: <TruckIcon className="w-6 h-6" />, label: "Buses" },
+    { to: "/app/pilotos/dashboard", icon: <ClipboardDocumentListIcon className="w-6 h-6" />, label: "Pilotos" },
+    { to: "/app/rutas/dashboard", icon: <MapIcon className="w-6 h-6" />, label: "Rutas" },
+    { to: "/app/reportes", icon: <ChartPieIcon className="w-6 h-6" />, label: "Reportes" },
+    { to: "/app/usuarios", icon: <UsersIcon className="w-6 h-6" />, label: "Usuarios" },
+    { to: "/app/guardias", icon: <ShieldExclamationIcon className="w-6 h-6" />, label: "Guardias" },
+    { to: "/app/mantenimientos", icon: <WrenchScrewdriverIcon className="w-6 h-6" />, label: "Mantenimientos" },
+    { to: "/app/estaciones", icon: <BuildingLibraryIcon className="w-6 h-6" />, label: "Estaciones" },
+    { to: "/app/distancias", icon: <MapPinIcon className="w-6 h-6" />, label: "Distancias" },
+    { to: "/app/horarios", icon: <ClockIcon className="w-6 h-6" />, label: "Horarios" },
   ];
 
   return (
@@ -64,13 +66,13 @@ export default function Sidebar() {
             alt="Foto de usuario"
             className="w-16 h-16 rounded-full border-2 border-[#01ff09] object-cover"
           />
-          <NavLink
-            to="/usuarios/crear"
-            className="mt-2 flex items-center gap-2 text-sm hover:text-[#01ff09]"
-          >
-            <UserPlusIcon className="w-4 h-4" />
-            Agregar Usuario
-          </NavLink>
+          {user && (
+            <div className="mt-2 text-center">
+              <p className="text-sm font-medium text-white">
+                {user.nombre} {user.apellido}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
