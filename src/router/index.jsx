@@ -72,7 +72,7 @@ import UsuarioLogin from "../pages/usuario/UsuarioNuevoLogin";
 
 // Horarios
 import ConsultarHorarios from "../pages/Horarios/ConsultarHorarios";
-import ConsultarHorariosxEstacionesxRutas from "../pages/Horarios/ConsultarHorariosxEstacionesxRutas.jsx";
+import ConsultarHorariosxEstacionesxRutas from "../pages/Horarios/ConsultarHorariosXEstacionesXRutas";
 
 // Componente para rutas protegidas
 const PrivateRoute = ({ children }) => {
