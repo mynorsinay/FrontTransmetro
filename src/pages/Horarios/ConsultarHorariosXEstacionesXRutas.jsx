@@ -39,7 +39,7 @@ export default function ConsultarHorariosXEstacionesXRutas() {
     <div className="p-6">
       {/* Botón de regreso */}
       <button
-        onClick={() => navigate("/horarios")}
+        onClick={() => navigate("/app/horarios")}
         className="flex items-center gap-2 bg-[#01ff09] text-black font-semibold px-4 py-2 rounded-xl mb-6 hover:bg-[#60ff40] transition-all"
       >
         <span className="text-white p-1 rounded">⬅️</span> Regresar

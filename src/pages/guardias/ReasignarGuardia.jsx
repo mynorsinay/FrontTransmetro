@@ -120,7 +120,7 @@ export default function ReasignarGuardia() {
 
       {/* Botón de regresar */}
       <div className="mb-4">
-        <Button onClick={() => navigate("/guardias")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/guardias")}>⬅️ Regresar</Button>
       </div>
 
       {/* Formulario dentro de una tarjeta */}

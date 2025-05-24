@@ -213,7 +213,7 @@ export default function CrearPiloto() {
   return (
     <div className="p-6">
       <button
-        onClick={() => navigate("/pilotos/dashboard")}
+        onClick={() => navigate("/app/pilotos/dashboard")}
         className="mb-6 px-4 py-2 bg-[#01ff09] text-black rounded-xl font-semibold hover:bg-[#00e607] transition"
       >
         ⬅️ Regresar

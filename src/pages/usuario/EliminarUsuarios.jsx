@@ -86,7 +86,7 @@ export default function EliminarUsuarios() {
 
       {/* Botón de regresar */}
       <div className="mb-4">
-        <Button onClick={() => navigate("/usuarios")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/usuarios")}>⬅️ Regresar</Button>
       </div>
 
       {/* Formulario */}

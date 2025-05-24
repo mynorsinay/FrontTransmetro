@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   HomeIcon,
@@ -11,16 +11,23 @@ import {
   WrenchScrewdriverIcon,
   ShieldExclamationIcon,
   Bars3Icon,
-  UserPlusIcon,
   BuildingLibraryIcon,
   MapPinIcon,
   ClockIcon,
   ClipboardDocumentListIcon,
+  ArrowRightOnRectangleIcon,
+  XMarkIcon
 } from "@heroicons/react/24/solid";
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isAuthenticated, user } = useAuth(); 
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const links = [
     { to: "/app", icon: <HomeIcon className="w-6 h-6" />, label: "Inicio" },
@@ -58,7 +65,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Foto de perfil y botón de agregar usuario */}
+      {/* Foto de perfil y nombre del usuario */}
       {isExpanded && (
         <div className="flex flex-col items-center mb-6">
           <img
@@ -71,12 +78,13 @@ export default function Sidebar() {
               <p className="text-sm font-medium text-white">
                 {user.nombre} {user.apellido}
               </p>
+              <p className="text-xs text-gray-300">{user.rol}</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Navegación simple */}
+      {/* Navegación */}
       <nav className="flex flex-col gap-4 flex-grow">
         {links.map((link) => (
           <NavLink
@@ -95,6 +103,23 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Botón de cerrar sesión */}
+      <button
+        onClick={handleLogout}
+        className={`mt-4 flex items-center gap-3 px-3 py-2 rounded-md transition-colors bg-red-600 hover:bg-red-700 ${
+          isExpanded ? "justify-start" : "justify-center"
+        }`}
+      >
+        {isExpanded ? (
+          <>
+            <ArrowRightOnRectangleIcon className="w-6 h-6" />
+            <span>Cerrar sesión</span>
+          </>
+        ) : (
+          <XMarkIcon className="w-6 h-6" />
+        )}
+      </button>
     </aside>
   );
 }

@@ -76,7 +76,7 @@ export default function ActualizarRuta() {
     <div className="p-6">
       {/* Botón de regresar */}
       <button
-        onClick={() => navigate("/rutas/dashboard")}
+        onClick={() => navigate("/app/rutas/dashboard")}
         className="mb-6 px-4 py-2 bg-[#01ff09] text-black rounded-xl font-semibold hover:bg-[#00e607] transition"
       >
         ⬅️ Regresar

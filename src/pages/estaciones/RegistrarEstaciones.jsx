@@ -81,7 +81,7 @@ export default function RegistrarEstacion() {
       <Header titulo="Registrar Estación" fechaHora={new Date()} /> 
 
       <div className="mb-4">
-        <Button onClick={() => navigate("/estaciones")}>⬅️ Regresar</Button>
+        <Button onClick={() => navigate("/app/estaciones")}>⬅️ Regresar</Button>
       </div>
 
       <Card className="border border-[#01ff09]/50 rounded-2xl shadow-md hover:shadow-lg transition-shadow">

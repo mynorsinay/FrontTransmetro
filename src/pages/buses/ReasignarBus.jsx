@@ -101,7 +101,7 @@ export default function ReasignarBuses() {
     <div className="p-6">
       {/* Botón para regresar */}
       <button
-        onClick={() => navigate("/buses")}
+        onClick={() => navigate("/app/buses")}
         className="mb-6 px-4 py-2 bg-[#01ff09] text-black rounded-xl font-semibold hover:bg-[#00e607] transition"
       >
         ⬅️ Regresar
