@@ -54,7 +54,7 @@ export default function ConsultarHorarios() {
   return (
     <div className="p-6">
       {/* Header principal */}
-      <Header titulo="🕑 Gestión de Horarios" fechaHora={new Date()} />
+      <Header titulo="🕑 Gestión de Horarios"  />
 
       {/* Tarjetas de acciones */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

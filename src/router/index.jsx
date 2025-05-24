@@ -1,7 +1,12 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
 
+// Importación de páginas públicas
+import Login from "../pages/usuario/Login";
+
+// Importación de páginas protegidas (requieren autenticación)
 // Dashboard
 import Dashboard from "../pages/dashboard/Dashboard";
 
@@ -63,15 +68,35 @@ import ConsultarUsuarios from "../pages/usuario/ConsultarUsuarios";
 import EliminarUsuarios from "../pages/usuario/EliminarUsuarios";
 import ReiniciarPass from "../pages/usuario/ReiniciarPass";
 import UsuariosDashboard from "../pages/usuario/UsuariosDashboard";
+import UsuarioLogin from "../pages/usuario/UsuarioNuevoLogin";
 
 // Horarios
 import ConsultarHorarios from "../pages/Horarios/ConsultarHorarios";
 import ConsultarHorariosxEstacionesxRutas from "../pages/Horarios/ConsultarHorariosxEstacionesxRutas";
 
+// Componente para rutas protegidas
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      {/* --- Rutas Públicas --- */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/usuarios/reiniciar" element={<ReiniciarPass />} />
+      <Route path="/usuarios/crear" element={<UsuarioLogin />} />
+      {/* --- Rutas Protegidas --- */}
+      <Route
+        path="/app"
+        element={
+          <PrivateRoute>
+            <Layout />
+          </PrivateRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
 
         {/* Buses */}
@@ -137,6 +162,8 @@ export default function AppRoutes() {
         <Route path="horarios/consultar" element={<ConsultarHorariosxEstacionesxRutas />} />
       </Route>
 
+      {/* Ruta para páginas no encontradas (redirige al login) */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
