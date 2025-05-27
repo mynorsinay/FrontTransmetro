@@ -6,145 +6,311 @@ import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import api from "../../services/api";
-import { useAuth } from "../../context/AuthContext"; // Asumiendo que tienes un AuthContext
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
-export default function Login() {
+export default function CrearUsuarios() {
     const navigate = useNavigate();
-    const { login } = useAuth(); // Para manejar el estado de autenticación
     const [formData, setFormData] = useState({
+        idEstado: 1,
+        idRol: 1,
         nombreUsuario: "",
-        contrasena: ""
+        contrasena: "",
+        confirmarContrasena: "",
+        primerNombre: "",
+        segundoNombre: "",
+        primerApellido: "",
+        segundoApellido: "",
+        email: "",
+        telefono: "",
     });
+
     const [errors, setErrors] = useState({});
-    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-    const [welcomeMessage, setWelcomeMessage] = useState("");
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+
+        if (["primerNombre", "segundoNombre", "primerApellido", "segundoApellido"].includes(name)) {
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) return;
+        }
+
+        if (name === "telefono") {
+            if (!/^\d{0,8}$/.test(value)) return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: "" }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+
+        if (!formData.nombreUsuario.trim()) newErrors.nombreUsuario = "Este campo es obligatorio";
+        if (!formData.contrasena) newErrors.contrasena = "Este campo es obligatorio";
+        if (!formData.confirmarContrasena) newErrors.confirmarContrasena = "Este campo es obligatorio";
+        if (!formData.primerNombre.trim()) newErrors.primerNombre = "Este campo es obligatorio";
+        if (!formData.primerApellido.trim()) newErrors.primerApellido = "Este campo es obligatorio";
+        if (!formData.email.trim()) newErrors.email = "Este campo es obligatorio";
+        if (!formData.telefono.trim()) newErrors.telefono = "Este campo es obligatorio";
+
+        if (formData.email && !emailRegex.test(formData.email)) {
+            newErrors.email = "Ingrese un correo electrónico válido";
+        }
+
+        if (formData.primerNombre && !nameRegex.test(formData.primerNombre)) {
+            newErrors.primerNombre = "Solo se permiten letras";
+        }
+        if (formData.segundoNombre && !nameRegex.test(formData.segundoNombre)) {
+            newErrors.segundoNombre = "Solo se permiten letras";
+        }
+        if (formData.primerApellido && !nameRegex.test(formData.primerApellido)) {
+            newErrors.primerApellido = "Solo se permiten letras";
+        }
+        if (formData.segundoApellido && !nameRegex.test(formData.segundoApellido)) {
+            newErrors.segundoApellido = "Solo se permiten letras";
+        }
+
+        if (formData.contrasena && !passwordRegex.test(formData.contrasena)) {
+            newErrors.contrasena = "Mínimo 8 caracteres, incluyendo letras, números y caracteres especiales";
+        }
+
+        if (formData.contrasena !== formData.confirmarContrasena) {
+            newErrors.confirmarContrasena = "Las contraseñas no coinciden";
+        }
+
+        if (formData.telefono && !/^\d{8}$/.test(formData.telefono)) {
+            newErrors.telefono = "Debe tener exactamente 8 dígitos";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors({});
 
-        if (!formData.nombreUsuario || !formData.contrasena) {
-            setErrors({ submitError: "Todos los campos son obligatorios" });
-            return;
-        }
+        if (!validateForm()) return;
 
         try {
-            const response = await api.post("/Usuarios/Login", {
-                nombreUsuario: formData.nombreUsuario,
-                contrasena: formData.contrasena
+            const res = await api.post("/Usuarios/CrearUsuario", formData);
+            console.log("Usuario creado: ", res.data);
+            setModalMessage("El usuario ha sido creado correctamente.");
+            setModalOpen(true);
+            setFormData({
+                idEstado: 1,
+                idRol: 1,
+                nombreUsuario: "",
+                contrasena: "",
+                confirmarContrasena: "",
+                primerNombre: "",
+                segundoNombre: "",
+                primerApellido: "",
+                segundoApellido: "",
+                email: "",
+                telefono: "",
             });
-
-            // Guardar datos del usuario en el contexto de autenticación
-            login({
-                usuario: response.data.usuario,
-                nombre: response.data.nombre,
-                apellido: response.data.apellido,
-                rol: response.data.rol
-            });
-
-            // Mostrar mensaje de bienvenida
-            setWelcomeMessage(`¡Bienvenido ${response.data.nombre} ${response.data.apellido}!`);
-            setShowWelcomeModal(true);
-
-            // Redirigir después de 2 segundos
-            setTimeout(() => {
-                setShowWelcomeModal(false);
-                navigate("/app"); // Asegúrate que esta ruta sea tu dashboard
-            }, 2000);
-
         } catch (error) {
-            console.error("Error de login:", error);
-
-            let errorMessage = "Error al iniciar sesión";
-
-            // Extracción detallada del mensaje de error
-            if (error.response) {
-                // Si el backend devuelve un mensaje específico
-                if (error.response.data) {
-                    errorMessage = error.response.data.message ||
-                        error.response.data.Message ||
-                        error.response.data.error ||
-                        "Credenciales inválidas";
-                }
-
-                // Si es un Bad Request sin mensaje específico
-                if (error.response.status === 400 && !error.response.data) {
-                    errorMessage = "Credenciales incorrectas";
-                }
-            }
-
-            setErrors({ submitError: errorMessage });
+            console.error("Error al crear el usuario:", error);
+            setModalMessage("Error al crear el usuario. Por favor intente nuevamente.");
+            setModalOpen(true);
         }
+    };
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-white text-black p-6">
             <div className="w-full max-w-md">
-                <Header titulo="🔐 Iniciar Sesión" />
+                <Header titulo="👤 Crear Nuevo Usuario" />
 
                 <Card>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <Input
-                                label="Nombre de Usuario"
-                                name="nombreUsuario"
-                                value={formData.nombreUsuario}
-                                onChange={handleChange}
-                                error={errors.nombreUsuario}
-                            />
+                            <div>
+                                <Input
+                                    label="Nombre de Usuario *"
+                                    name="nombreUsuario"
+                                    value={formData.nombreUsuario}
+                                    onChange={handleChange}
+                                    error={errors.nombreUsuario}
+                                />
+                                {errors.nombreUsuario && <p className="text-red-500 text-sm mt-1">{errors.nombreUsuario}</p>}
+                            </div>
 
-                            <Input
-                                label="Contraseña"
-                                name="contrasena"
-                                type="password"
-                                value={formData.contrasena}
-                                onChange={handleChange}
-                                error={errors.contrasena}
-                            />
-
-                            {errors.submitError && (
-                                <div className="text-red-500 text-sm text-center">
-                                    {errors.submitError}
+                            {/* Campo de contraseña con botón al lado */}
+                            <div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <Input
+                                            label="Contraseña *"
+                                            name="contrasena"
+                                            type={showPassword ? "text" : "password"}
+                                            value={formData.contrasena}
+                                            onChange={handleChange}
+                                            error={errors.contrasena}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="h-10 px-3 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none border border-gray-300 rounded-md"
+                                        onClick={togglePasswordVisibility}
+                                    >
+                                        {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                    </button>
                                 </div>
-                            )}
+                                {errors.contrasena && <p className="text-red-500 text-sm mt-1">{errors.contrasena}</p>}
+                            </div>
 
-                            <div className="text-right">
-                                <Link to="/usuarios/reiniciar" className="text-sm text-blue-600 hover:underline">
-                                    ¿Olvidaste tu contraseña?
-                                </Link>
+                            {/* Campo de confirmar contraseña con botón al lado */}
+                            <div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <Input
+                                            label="Confirmar Contraseña *"
+                                            name="confirmarContrasena"
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={formData.confirmarContrasena}
+                                            onChange={handleChange}
+                                            error={errors.confirmarContrasena}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="h-10 px-3 flex items-center justify-center text-gray-500 hover:text-gray-700 focus:outline-none border border-gray-300 rounded-md"
+                                        onClick={toggleConfirmPasswordVisibility}
+                                    >
+                                        {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                    </button>
+                                </div>
+                                {errors.confirmarContrasena && <p className="text-red-500 text-sm mt-1">{errors.confirmarContrasena}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Input
+                                        label="Primer Nombre *"
+                                        name="primerNombre"
+                                        value={formData.primerNombre}
+                                        onChange={handleChange}
+                                        error={errors.primerNombre}
+                                    />
+                                    {errors.primerNombre && <p className="text-red-500 text-sm mt-1">{errors.primerNombre}</p>}
+                                </div>
+                                <div>
+                                    <Input
+                                        label="Segundo Nombre"
+                                        name="segundoNombre"
+                                        value={formData.segundoNombre}
+                                        onChange={handleChange}
+                                        error={errors.segundoNombre}
+                                    />
+                                    {errors.segundoNombre && <p className="text-red-500 text-sm mt-1">{errors.segundoNombre}</p>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Input
+                                        label="Primer Apellido *"
+                                        name="primerApellido"
+                                        value={formData.primerApellido}
+                                        onChange={handleChange}
+                                        error={errors.primerApellido}
+                                    />
+                                    {errors.primerApellido && <p className="text-red-500 text-sm mt-1">{errors.primerApellido}</p>}
+                                </div>
+                                <div>
+                                    <Input
+                                        label="Segundo Apellido"
+                                        name="segundoApellido"
+                                        value={formData.segundoApellido}
+                                        onChange={handleChange}
+                                        error={errors.segundoApellido}
+                                    />
+                                    {errors.segundoApellido && <p className="text-red-500 text-sm mt-1">{errors.segundoApellido}</p>}
+                                </div>
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Correo Electrónico *"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    error={errors.email}
+                                />
+                                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Teléfono *"
+                                    name="telefono"
+                                    type="tel"
+                                    value={formData.telefono}
+                                    onChange={handleChange}
+                                    error={errors.telefono}
+                                    maxLength="8"
+                                />
+                                {errors.telefono && <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>}
                             </div>
 
                             <div className="flex justify-end">
-                                <Button type="submit">Entrar al Sistema</Button>
+                                <Button type="submit">Registrar Usuario</Button>
                             </div>
 
+                            {/* Enlace para volver */}
                             <div className="text-center pt-4 border-t border-gray-200">
-                                <span className="text-sm text-gray-600">¿No tienes cuenta? </span>
-                                <Link to="/usuarios/crear" className="text-sm text-blue-600 hover:underline">
-                                    Regístrate aquí
+                                <Link
+                                    to="/app/usuarios"
+                                    className="text-sm text-blue-600 hover:underline"
+                                >
+                                    ← Volver al inicio de sesión
                                 </Link>
                             </div>
                         </form>
                     </CardContent>
                 </Card>
 
-                {/* Modal de Bienvenida */}
+                {/* Modal de resultados */}
                 <Modal
-                    isOpen={showWelcomeModal}
-                    onClose={() => { }}
+                    isOpen={modalOpen}
+                    onClose={() => setModalOpen(false)}
                     className="bg-black bg-opacity-50 flex items-center justify-center"
                 >
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
-                        <h2 className="text-2xl font-bold text-center mb-4">¡Bienvenido!</h2>
-                        <p className="text-lg text-center">{welcomeMessage}</p>
-                        <div className="mt-4 flex justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <h2 className="text-xl font-bold text-center mb-4">
+                            {errors.submitError ? "Error" : "¡Éxito!"}
+                        </h2>
+                        <p className="mb-4 text-center">{modalMessage}</p>
+                        <div className="flex justify-end">
+                            <Button onClick={() => {
+                                setModalOpen(false);
+                                if (!errors.submitError) {
+                                    navigate("/app/usuarios");
+                                }
+                            }}>
+                                Cerrar
+                            </Button>
                         </div>
                     </div>
                 </Modal>
