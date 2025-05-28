@@ -198,7 +198,7 @@ export default function ActualizarUsuarios() {
   const handleCloseModal = () => {
     setModalOpen({ isOpen: false, isSuccess: false });
     if (modalOpen.isSuccess) {
-      navigate("/usuarios");
+      window.location.reload();
     }
   };
 
