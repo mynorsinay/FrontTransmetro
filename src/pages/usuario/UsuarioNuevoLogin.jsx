@@ -123,7 +123,13 @@ export default function CrearUsuarios() {
             });
         } catch (error) {
             console.error("Error al crear el usuario:", error);
-            setModalMessage("Error al crear el usuario. Por favor intente nuevamente.");
+            let errorMsg = "❌ Error al crear el usuario";
+            if (error.response && error.response.data && typeof error.response.data === "string") {
+                errorMsg = `❌ ${error.response.data}`;
+            } else if (error.response && error.response.data?.mensaje) {
+                errorMsg = `❌ ${error.response.data.mensaje}`;
+            }
+            setModalMessage(errorMsg);
             setModalOpen(true);
         }
     };
@@ -299,14 +305,14 @@ export default function CrearUsuarios() {
                 >
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
                         <h2 className="text-xl font-bold text-center mb-4">
-                            {errors.submitError ? "Error" : "¡Éxito!"}
+                            {errors.submitError ? "Error" : "¡Error!"}
                         </h2>
                         <p className="mb-4 text-center">{modalMessage}</p>
                         <div className="flex justify-end">
                             <Button onClick={() => {
                                 setModalOpen(false);
                                 if (!errors.submitError) {
-                                    navigate("/app/usuarios");
+                                    navigate("/usuarios/crear");
                                 }
                             }}>
                                 Cerrar
